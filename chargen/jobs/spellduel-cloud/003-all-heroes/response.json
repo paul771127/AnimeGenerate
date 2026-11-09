@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "job": "003-all-heroes",
+  "status": "partial",
+  "completedClasses": [
+    "mage",
+    "swordsman",
+    "archer",
+    "assassin",
+    "priest",
+    "novice"
+  ],
+  "pendingClasses": [
+    "paladin",
+    "berserker",
+    "marksman",
+    "ranger",
+    "summoner",
+    "ninja",
+    "shadowdancer",
+    "bishop",
+    "inquisitor"
+  ],
+  "batch1": {
+    "classes": [
+      "mage",
+      "swordsman",
+      "archer",
+      "assassin",
+      "priest",
+      "novice"
+    ],
+    "perClassClips": 17,
+    "fps": 30,
+    "unityValidated": true
+  },
+  "runtimeChanged": false,
+  "noMeta": true,
+  "noShader": true,
+  "noPrefab": true,
+  "importInstructions": "UNITY_IMPORT.md",
+  "perClassResponses": {
+    "mage": "mage/response.json",
+    "swordsman": "swordsman/response.json",
+    "archer": "archer/response.json",
+    "assassin": "assassin/response.json",
+    "priest": "priest/response.json",
+    "novice": "novice/response.json"
+  }
+}

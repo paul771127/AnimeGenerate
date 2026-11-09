@@ -1,0 +1,91 @@
+// Copy into a Unity Editor folder as ConfigureAllHeroes003Import.cs.
+// Runs only at import time; no Runtime code or supplied .meta is needed.
+using System;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
+public static class ConfigureAllHeroes003Import {
+ static readonly string[] Ids={"mage","swordsman","archer","assassin","priest","novice","paladin","berserker","marksman","ranger","summoner","ninja","shadowdancer","bishop","inquisitor"};
+ static readonly string[] Names={"idle","walk","run","walk_back","walk_left","walk_right","run_back","run_left","run_right","attack","skill","skill_loop","hit","crouch","jump","die","victory"};
+ static readonly string[] Loops={"idle","walk","run","walk_back","walk_left","walk_right","run_back","run_left","run_right","skill_loop","crouch"};
+ static HumanBone[] Mapping()=>new HumanBone[]{
+  new HumanBone{humanName="Hips",boneName="J_Bip_C_Hips",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftUpperLeg",boneName="J_Bip_L_UpperLeg",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightUpperLeg",boneName="J_Bip_R_UpperLeg",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftLowerLeg",boneName="J_Bip_L_LowerLeg",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightLowerLeg",boneName="J_Bip_R_LowerLeg",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftFoot",boneName="J_Bip_L_Foot",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightFoot",boneName="J_Bip_R_Foot",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="Spine",boneName="J_Bip_C_Spine",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="Chest",boneName="J_Bip_C_Chest",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="Neck",boneName="J_Bip_C_Neck",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="Head",boneName="J_Bip_C_Head",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftShoulder",boneName="J_Bip_L_Shoulder",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightShoulder",boneName="J_Bip_R_Shoulder",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftUpperArm",boneName="J_Bip_L_UpperArm",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightUpperArm",boneName="J_Bip_R_UpperArm",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftLowerArm",boneName="J_Bip_L_LowerArm",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightLowerArm",boneName="J_Bip_R_LowerArm",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftHand",boneName="J_Bip_L_Hand",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightHand",boneName="J_Bip_R_Hand",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftToes",boneName="J_Bip_L_ToeBase",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightToes",boneName="J_Bip_R_ToeBase",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftEye",boneName="J_Adj_L_FaceEye",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightEye",boneName="J_Adj_R_FaceEye",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftThumbProximal",boneName="J_Bip_L_Thumb1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftThumbIntermediate",boneName="J_Bip_L_Thumb2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftThumbDistal",boneName="J_Bip_L_Thumb3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftIndexProximal",boneName="J_Bip_L_Index1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftIndexIntermediate",boneName="J_Bip_L_Index2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftIndexDistal",boneName="J_Bip_L_Index3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftMiddleProximal",boneName="J_Bip_L_Middle1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftMiddleIntermediate",boneName="J_Bip_L_Middle2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftMiddleDistal",boneName="J_Bip_L_Middle3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftRingProximal",boneName="J_Bip_L_Ring1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftRingIntermediate",boneName="J_Bip_L_Ring2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftRingDistal",boneName="J_Bip_L_Ring3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftLittleProximal",boneName="J_Bip_L_Little1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftLittleIntermediate",boneName="J_Bip_L_Little2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="LeftLittleDistal",boneName="J_Bip_L_Little3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightThumbProximal",boneName="J_Bip_R_Thumb1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightThumbIntermediate",boneName="J_Bip_R_Thumb2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightThumbDistal",boneName="J_Bip_R_Thumb3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightIndexProximal",boneName="J_Bip_R_Index1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightIndexIntermediate",boneName="J_Bip_R_Index2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightIndexDistal",boneName="J_Bip_R_Index3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightMiddleProximal",boneName="J_Bip_R_Middle1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightMiddleIntermediate",boneName="J_Bip_R_Middle2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightMiddleDistal",boneName="J_Bip_R_Middle3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightRingProximal",boneName="J_Bip_R_Ring1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightRingIntermediate",boneName="J_Bip_R_Ring2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightRingDistal",boneName="J_Bip_R_Ring3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightLittleProximal",boneName="J_Bip_R_Little1",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightLittleIntermediate",boneName="J_Bip_R_Little2",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="RightLittleDistal",boneName="J_Bip_R_Little3",limit=new HumanLimit{useDefaultValues=true}},
+  new HumanBone{humanName="UpperChest",boneName="J_Bip_C_UpperChest",limit=new HumanLimit{useDefaultValues=true}}
+ };
+ [MenuItem("SpellDuel/CharKit/Configure job 003 hero imports")]
+ public static void Execute(){foreach(var id in Ids){string p="Assets/SpellDuel/Resources/CharKit/"+id+"_v1/"+id+".fbx";if(AssetImporter.GetAtPath(p)!=null)Configure(p,id);}}
+ public static void Configure(string path,string id){
+  if(!Ids.Contains(id))throw new ArgumentException("Unknown hero id");
+  var model=AssetDatabase.LoadAssetAtPath<GameObject>(path);var importer=AssetImporter.GetAtPath(path) as ModelImporter;
+  if(!model||importer==null)throw new InvalidOperationException("Import the hero FBX first: "+path);
+  var desc=importer.humanDescription;desc.human=Mapping();
+  desc.skeleton=model.GetComponentsInChildren<Transform>(true).Select(t=>new SkeletonBone{name=t.name,position=t.localPosition,rotation=t.localRotation,scale=t.localScale}).ToArray();
+  desc.upperArmTwist=.5f;desc.lowerArmTwist=.5f;desc.upperLegTwist=.5f;desc.lowerLegTwist=.5f;desc.armStretch=.05f;desc.legStretch=.05f;
+  importer.humanDescription=desc;importer.animationType=ModelImporterAnimationType.Human;importer.avatarSetup=ModelImporterAvatarSetup.CreateFromThisModel;importer.optimizeGameObjects=false;
+  if(!AssetDatabase.IsValidFolder("Assets/Editor"))AssetDatabase.CreateFolder("Assets","Editor");
+  const string folder="Assets/Editor/CharKitImportMasks";if(!AssetDatabase.IsValidFolder(folder))AssetDatabase.CreateFolder("Assets/Editor","CharKitImportMasks");
+  string maskPath=folder+"/"+id+"_Job003.mask";var mask=AssetDatabase.LoadAssetAtPath<AvatarMask>(maskPath);if(!mask){mask=new AvatarMask();AssetDatabase.CreateAsset(mask,maskPath);}
+  var ts=model.GetComponentsInChildren<Transform>(true);mask.transformCount=ts.Length;
+  for(int i=0;i<ts.Length;i++){mask.SetTransformPath(i,AnimationUtility.CalculateTransformPath(ts[i],model.transform));mask.SetTransformActive(i,true);}
+  for(int i=0;i<(int)AvatarMaskBodyPart.LastBodyPart;i++)mask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i,true);
+  EditorUtility.SetDirty(mask);AssetDatabase.SaveAssets();
+  var clips=importer.defaultClipAnimations;
+  if(clips.Length!=17||Names.Any(n=>!clips.Any(c=>c.name==n)))throw new InvalidOperationException("Expected exact 17 job 003 clips in "+path);
+  foreach(var clip in clips){clip.loopTime=Loops.Contains(clip.name);clip.ConfigureClipFromMask(mask);clip.maskType=ClipAnimationMaskType.CopyFromOther;clip.maskSource=mask;}
+  importer.clipAnimations=clips;importer.SaveAndReimport();
+  var avatar=AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();if(!avatar||!avatar.isValid||!avatar.isHuman)throw new InvalidOperationException("Invalid job 003 Humanoid avatar");
+  Debug.Log("Configured job 003 hero: "+id+" (17 clips, full weapon Transform mask)");
+ }
+}

@@ -1,0 +1,218 @@
+[
+  {
+    "humanName": "Hips",
+    "boneName": "J_Bip_C_Hips"
+  },
+  {
+    "humanName": "LeftUpperLeg",
+    "boneName": "J_Bip_L_UpperLeg"
+  },
+  {
+    "humanName": "RightUpperLeg",
+    "boneName": "J_Bip_R_UpperLeg"
+  },
+  {
+    "humanName": "LeftLowerLeg",
+    "boneName": "J_Bip_L_LowerLeg"
+  },
+  {
+    "humanName": "RightLowerLeg",
+    "boneName": "J_Bip_R_LowerLeg"
+  },
+  {
+    "humanName": "LeftFoot",
+    "boneName": "J_Bip_L_Foot"
+  },
+  {
+    "humanName": "RightFoot",
+    "boneName": "J_Bip_R_Foot"
+  },
+  {
+    "humanName": "Spine",
+    "boneName": "J_Bip_C_Spine"
+  },
+  {
+    "humanName": "Chest",
+    "boneName": "J_Bip_C_Chest"
+  },
+  {
+    "humanName": "Neck",
+    "boneName": "J_Bip_C_Neck"
+  },
+  {
+    "humanName": "Head",
+    "boneName": "J_Bip_C_Head"
+  },
+  {
+    "humanName": "LeftShoulder",
+    "boneName": "J_Bip_L_Shoulder"
+  },
+  {
+    "humanName": "RightShoulder",
+    "boneName": "J_Bip_R_Shoulder"
+  },
+  {
+    "humanName": "LeftUpperArm",
+    "boneName": "J_Bip_L_UpperArm"
+  },
+  {
+    "humanName": "RightUpperArm",
+    "boneName": "J_Bip_R_UpperArm"
+  },
+  {
+    "humanName": "LeftLowerArm",
+    "boneName": "J_Bip_L_LowerArm"
+  },
+  {
+    "humanName": "RightLowerArm",
+    "boneName": "J_Bip_R_LowerArm"
+  },
+  {
+    "humanName": "LeftHand",
+    "boneName": "J_Bip_L_Hand"
+  },
+  {
+    "humanName": "RightHand",
+    "boneName": "J_Bip_R_Hand"
+  },
+  {
+    "humanName": "LeftToes",
+    "boneName": "J_Bip_L_ToeBase"
+  },
+  {
+    "humanName": "RightToes",
+    "boneName": "J_Bip_R_ToeBase"
+  },
+  {
+    "humanName": "LeftEye",
+    "boneName": "J_Adj_L_FaceEye"
+  },
+  {
+    "humanName": "RightEye",
+    "boneName": "J_Adj_R_FaceEye"
+  },
+  {
+    "humanName": "LeftThumbProximal",
+    "boneName": "J_Bip_L_Thumb1"
+  },
+  {
+    "humanName": "LeftThumbIntermediate",
+    "boneName": "J_Bip_L_Thumb2"
+  },
+  {
+    "humanName": "LeftThumbDistal",
+    "boneName": "J_Bip_L_Thumb3"
+  },
+  {
+    "humanName": "LeftIndexProximal",
+    "boneName": "J_Bip_L_Index1"
+  },
+  {
+    "humanName": "LeftIndexIntermediate",
+    "boneName": "J_Bip_L_Index2"
+  },
+  {
+    "humanName": "LeftIndexDistal",
+    "boneName": "J_Bip_L_Index3"
+  },
+  {
+    "humanName": "LeftMiddleProximal",
+    "boneName": "J_Bip_L_Middle1"
+  },
+  {
+    "humanName": "LeftMiddleIntermediate",
+    "boneName": "J_Bip_L_Middle2"
+  },
+  {
+    "humanName": "LeftMiddleDistal",
+    "boneName": "J_Bip_L_Middle3"
+  },
+  {
+    "humanName": "LeftRingProximal",
+    "boneName": "J_Bip_L_Ring1"
+  },
+  {
+    "humanName": "LeftRingIntermediate",
+    "boneName": "J_Bip_L_Ring2"
+  },
+  {
+    "humanName": "LeftRingDistal",
+    "boneName": "J_Bip_L_Ring3"
+  },
+  {
+    "humanName": "LeftLittleProximal",
+    "boneName": "J_Bip_L_Little1"
+  },
+  {
+    "humanName": "LeftLittleIntermediate",
+    "boneName": "J_Bip_L_Little2"
+  },
+  {
+    "humanName": "LeftLittleDistal",
+    "boneName": "J_Bip_L_Little3"
+  },
+  {
+    "humanName": "RightThumbProximal",
+    "boneName": "J_Bip_R_Thumb1"
+  },
+  {
+    "humanName": "RightThumbIntermediate",
+    "boneName": "J_Bip_R_Thumb2"
+  },
+  {
+    "humanName": "RightThumbDistal",
+    "boneName": "J_Bip_R_Thumb3"
+  },
+  {
+    "humanName": "RightIndexProximal",
+    "boneName": "J_Bip_R_Index1"
+  },
+  {
+    "humanName": "RightIndexIntermediate",
+    "boneName": "J_Bip_R_Index2"
+  },
+  {
+    "humanName": "RightIndexDistal",
+    "boneName": "J_Bip_R_Index3"
+  },
+  {
+    "humanName": "RightMiddleProximal",
+    "boneName": "J_Bip_R_Middle1"
+  },
+  {
+    "humanName": "RightMiddleIntermediate",
+    "boneName": "J_Bip_R_Middle2"
+  },
+  {
+    "humanName": "RightMiddleDistal",
+    "boneName": "J_Bip_R_Middle3"
+  },
+  {
+    "humanName": "RightRingProximal",
+    "boneName": "J_Bip_R_Ring1"
+  },
+  {
+    "humanName": "RightRingIntermediate",
+    "boneName": "J_Bip_R_Ring2"
+  },
+  {
+    "humanName": "RightRingDistal",
+    "boneName": "J_Bip_R_Ring3"
+  },
+  {
+    "humanName": "RightLittleProximal",
+    "boneName": "J_Bip_R_Little1"
+  },
+  {
+    "humanName": "RightLittleIntermediate",
+    "boneName": "J_Bip_R_Little2"
+  },
+  {
+    "humanName": "RightLittleDistal",
+    "boneName": "J_Bip_R_Little3"
+  },
+  {
+    "humanName": "UpperChest",
+    "boneName": "J_Bip_C_UpperChest"
+  }
+]
