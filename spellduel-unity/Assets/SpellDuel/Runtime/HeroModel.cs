@@ -13,15 +13,21 @@ namespace SpellDuel
     /// </summary>
     public sealed class HeroModel : MonoBehaviour
     {
-        static readonly Dictionary<string, string> Kits = new Dictionary<string, string>
+        /// <summary>職業 id → 有沒有模型（Resources/CharKit/&lt;id&gt;_v1/&lt;id&gt;.fbx；工單 003 交一個就自動用一個）</summary>
+        static readonly Dictionary<string, bool> kitExists = new Dictionary<string, bool>();
+        static bool HasKit(string id)
         {
-            { "archmage", "CharKit/archmage_v1/" },
-        };
-        /// <summary>這個職業／進階職業有沒有生成器的模型（法師還沒轉職也先用大魔導師的）</summary>
+            if (string.IsNullOrEmpty(id)) return false;
+            if (!kitExists.TryGetValue(id, out var ok)) kitExists[id] = ok = Resources.Load<GameObject>(KitDir(id) + id) != null;
+            return ok;
+        }
+        static string KitDir(string id) => "CharKit/" + id + "_v1/";
+        /// <summary>這個職業用哪一套模型：進階職業的 → 基本職業的 → 法師還沒有就先用大魔導師；都沒有＝null（用程式拼的角色）</summary>
         public static string KitFor(string cls, string adv)
         {
-            if (adv != null && Kits.TryGetValue(adv, out var k)) return k;
-            if (cls == "mage" && (adv == null || adv == "archmage")) return Kits["archmage"];
+            if (HasKit(adv)) return adv;
+            if (HasKit(cls)) return cls;
+            if (cls == "mage" && (adv == null || adv == "archmage") && HasKit("archmage")) return "archmage";
             return null;
         }
 
@@ -44,27 +50,29 @@ namespace SpellDuel
 
         public static HeroModel Create(string cls, string adv)
         {
-            string kit = KitFor(cls, adv); if (kit == null) return null;
-            var src = Resources.Load<GameObject>(kit + "archmage");
+            string id = KitFor(cls, adv); if (id == null) return null;
+            var src = Resources.Load<GameObject>(KitDir(id) + id);
             if (!src) return null;
             var go = Instantiate(src);
-            go.name = "Hero " + kit;
+            go.name = "Hero " + id;
             var h = go.AddComponent<HeroModel>();
-            h.Kit = kit;
-            if (!h.Setup(kit)) { Destroy(go); return null; }
+            h.Kit = id;
+            if (!h.Setup(id)) { Destroy(go); return null; }
             return h;
         }
 
-        bool Setup(string kit)
+        bool Setup(string id)
         {
-            // 材質
-            if (!bodyMats.TryGetValue(kit, out var body) || !body)
+            string kit = KitDir(id);
+            // 材質：共用的賽璐璐 shader（Shaders/CharCel）；舊的 kit 自己附的也可以
+            if (!bodyMats.TryGetValue(id, out var body) || !body)
             {
-                var sh = Resources.Load<Shader>(kit + "archmage_toon");
+                var sh = Resources.Load<Shader>("Shaders/CharCel");
+                if (sh == null || !sh.isSupported) sh = Resources.Load<Shader>(kit + id + "_toon");
                 if (sh == null || !sh.isSupported) sh = Shader.Find("Unlit/Texture");
-                body = new Material(sh) { name = "Hero body " + kit, mainTexture = Resources.Load<Texture2D>(kit + "archmage_albedo") };
-                var em = Resources.Load<Texture2D>(kit + "archmage_emission"); if (em && body.HasProperty("_EmissionMap")) body.SetTexture("_EmissionMap", em);
-                bodyMats[kit] = body;
+                body = new Material(sh) { name = "Hero body " + id, mainTexture = Resources.Load<Texture2D>(kit + id + "_albedo") };
+                var em = Resources.Load<Texture2D>(kit + id + "_emission"); if (em && body.HasProperty("_EmissionMap")) body.SetTexture("_EmissionMap", em);
+                bodyMats[id] = body;
             }
             if (!outlineMat)
             {
@@ -95,9 +103,9 @@ namespace SpellDuel
             Transform Bone(string n) { foreach (var t in GetComponentsInChildren<Transform>(true)) if (t.name == n) return t; return null; }
             rUpper = Bone("J_Bip_R_UpperArm"); rLower = Bone("J_Bip_R_LowerArm"); rHand = Bone("J_Bip_R_Hand");
             lUpper = Bone("J_Bip_L_UpperArm"); lLower = Bone("J_Bip_L_LowerArm"); lHand = Bone("J_Bip_L_Hand");
-            staff = Bone("Staff");
+            staff = Bone("Staff") ?? Bone("Weapon_R");
             if (clips.Count == 0) return true;   // 沒有動作也照樣顯示（站姿）
-            graph = PlayableGraph.Create("Hero " + kit);
+            graph = PlayableGraph.Create("Hero " + id);
             graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             mixer = AnimationMixerPlayable.Create(graph, 2);
             var output = AnimationPlayableOutput.Create(graph, "Hero", animator);
@@ -124,7 +132,7 @@ namespace SpellDuel
         /// <summary>一次性的動作（施法、被打、跳）：播完前不會被走路之類的蓋掉</summary>
         public void PlayOnce(string name, float speed = 1f)
         {
-            if (name == "cast") name = CastClip;
+            if (name == "cast") name = CastClip; else if (name == "attack") name = AttackClip;
             if (!clips.TryGetValue(name, out var c)) return;
             curName = null; Play(name, false);
             curSpeed = Mathf.Max(0.1f, speed);
@@ -136,8 +144,11 @@ namespace SpellDuel
         public bool Has(string n) => clips.ContainsKey(n);
         /// <summary>有沒有側移／後退的動作（工單 002）；沒有＝往旁邊、往後走時轉身面向移動方向</summary>
         bool HasStrafe => Has("walk_back") && Has("walk_left") && Has("walk_right");
-        string CastClip => Has("cast_staff") ? "cast_staff" : "cast";
-        string CastLoopClip => Has("cast_staff_loop") ? "cast_staff_loop" : "cast_loop";
+        // 工單 003 的名字（attack／skill／skill_loop）→ 大魔導師的（cast_staff…）→ 001 的（cast…）
+        string Pick(params string[] names) { foreach (var n in names) if (Has(n)) return n; return names[names.Length - 1]; }
+        string AttackClip => Pick("attack", "cast_staff", "cast");
+        string CastClip => Pick("skill", "cast_staff", "cast");
+        string CastLoopClip => Pick("skill_loop", "cast_staff_loop", "cast_loop");
 
         /// <summary>每幀：位置、面向、移動方向（session 座標）＋動作狀態；lockFacing＝剛攻擊完、要一直面向準心</summary>
         public void Drive(Vector3 feet, Vector3 forward, Vector3 move, float speed, bool dead, bool charging, bool crouch, bool air, bool lockFacing)

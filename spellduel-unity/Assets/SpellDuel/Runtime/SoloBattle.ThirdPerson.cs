@@ -88,7 +88,7 @@ namespace SpellDuel
         void HeroAttackAnim(bool basic)
         {
             if (heroAimDir.sqrMagnitude > 0.5f) { heroFaceDir = heroAimDir; heroFaceUntil = Time.time + 1.2f; }   // 轉向準心對的方向攻擊
-            if (heroModel) { heroModel.PlayOnce("cast", basic ? 2.2f : 1.3f); heroCastAnimAt = Time.time; }
+            if (heroModel) { heroModel.PlayOnce(basic ? "attack" : "cast", basic ? (heroModel.Has("attack") ? 1f : 2.2f) : 1.3f);   // 普攻＝attack（劍士揮砍、獵人射箭…），沒有就用施法動作加速 heroCastAnimAt = Time.time; }
             else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
         }
         float heroCastAnimAt = -9f, heroFaceUntil = -9f;

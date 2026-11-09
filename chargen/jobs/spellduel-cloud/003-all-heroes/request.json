@@ -1,0 +1,15 @@
+{
+  "job": "003-all-heroes",
+  "kind": "character-batch",
+  "sameAs": "001-archmage-hero + 002-archmage-locomotion",
+  "classes": ["mage","swordsman","archer","assassin","priest","novice","paladin","berserker","marksman","ranger","summoner","ninja","shadowdancer","bishop","inquisitor"],
+  "reference": "spellduel-unity/Assets/SpellDuel/Resources/Story2D/classes/<id>.png",
+  "output": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/<id>_v1/<id>.fbx",
+  "textures": ["<id>_albedo.png", "<id>_emission.png"],
+  "animations": ["idle","walk","run","walk_back","walk_left","walk_right","run_back","run_left","run_right","attack","skill","skill_loop","hit","crouch","jump","die","victory"],
+  "inPlace": true, "fps": 30, "maxTriangles": 15000,
+  "rigNaming": "J_Bip_* (same as archmage); weapons under hand bones: Weapon_R, Weapon_L, Shield",
+  "noShader": true, "noMeta": true,
+  "batchesAllowed": true,
+  "branch": "claude/mobile-camera-mic-battle-game-v5nhfr"
+}
