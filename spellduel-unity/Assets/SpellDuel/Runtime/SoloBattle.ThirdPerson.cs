@@ -33,8 +33,9 @@ namespace SpellDuel
             set { PlayerPrefs.SetInt(ThirdPersonKey, value ? 1 : 0); PlayerPrefs.Save(); }
         }
 
-        CharacterRig selfRig; Vector3 selfLastFeet;
+        CharacterRig selfRig;
         Vector3 tpLastFwd, tpOffsetW; bool tpHas, tpLifted;
+        Vector3 tpTurnMoveW;
 
         bool TpOn => ThirdPerson && !NetMode && !Watching && battle != null && phase == Phase.Fighting && Me != null && area != null;
 
@@ -59,7 +60,6 @@ namespace SpellDuel
             var f = Fighter.Flat(me.forward);
             if (f.sqrMagnitude < 1e-4f) f = tpHas ? tpLastFwd : Vector3.forward;
             f.Normalize();
-            TrackYaw(f, Mathf.Max(1e-3f, Time.deltaTime));
             if (tpHas)
             {
                 // 原地轉身時手機會繞著身體畫一小段弧（手臂長）：也一起扣掉，角色才不會跟著挪（使用者：旋轉時不用動）
@@ -68,24 +68,18 @@ namespace SpellDuel
                 {
                     ShiftWorld(-WorldFrame.DirFromWorld(delta));
                     me.head += delta; dashMoveW += delta;
+                    tpTurnMoveW += delta;
                     tpLastFwd = f;
                 }
                 else f = tpLastFwd;
             }
-            else { tpLastFwd = f; tpHas = true; }
+            else { tpLastFwd = f; tpHas = true; heroHasMotion = false; }
             tpOffsetW = TpOffset(f);
             me.head += tpOffsetW;
         }
 
         /// <summary>手機離身體的距離（轉身時手機畫的弧半徑）</summary>
         const float TpArm = 0.3f;
-        /// <summary>手機轉向的速度（度／秒，平滑過）：轉得快時不算走路</summary>
-        float tpYawRate; Vector3 tpYawPrev;
-        void TrackYaw(Vector3 f, float dt)
-        {
-            if (tpYawPrev.sqrMagnitude > 0.5f) tpYawRate = Mathf.Lerp(tpYawRate, Vector3.Angle(tpYawPrev, f) / Mathf.Max(1e-3f, dt), 1f - Mathf.Exp(-dt * 8f));
-            tpYawPrev = f;
-        }
 
         /// <summary>角色相對手機的位置：前方 ThirdPersonDist、往左 ThirdPersonSide</summary>
         static Vector3 TpOffset(Vector3 f) => f * ThirdPersonDist - new Vector3(f.z, 0f, -f.x) * ThirdPersonSide;
@@ -98,7 +92,40 @@ namespace SpellDuel
             else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
         }
         float heroCastAnimAt = -9f, heroFaceUntil = -9f;
-        Vector3 heroAimDir, heroFaceDir, heroMoveW, heroPrevFeet; float heroSpeed;
+        Vector3 heroAimDir, heroFaceDir, heroMoveW; float heroSpeed;
+        Vector3 heroLastPhone, heroLastForward, heroLastVirtualMove; bool heroHasMotion;
+
+        // 只扣掉實際觀測到的轉身弧線；手機位置沒動時，不憑旋轉量產生反向位移。
+        static Vector3 HeroTranslationStep(Vector3 phoneStep, Vector3 armArc)
+        {
+            phoneStep.y = 0f; armArc.y = 0f;
+            if (armArc.sqrMagnitude > 1e-12f)
+                phoneStep -= armArc * Mathf.Clamp01(Vector3.Dot(phoneStep, armArc) / armArc.sqrMagnitude);
+            return phoneStep;
+        }
+
+        float UpdateHeroMovement(float dt)
+        {
+            if (!Tracking.Ok) { heroHasMotion = false; heroMoveW = Vector3.zero; heroSpeed = 0f; return 0f; }
+            var phone = cam.transform.position;
+            var forward = Fighter.Flat(cam.transform.forward).normalized;
+            // dashMoveW 也包含第三人稱轉向的世界補償；補償不能算成走路或衝刺。
+            var virtualMove = dashMoveW - tpTurnMoveW;
+            var step = Vector3.zero;
+            if (heroHasMotion)
+            {
+                var physical = HeroTranslationStep(phone - heroLastPhone, (forward - heroLastForward) * TpArm);
+                step = WorldFrame.DirToWorld(physical) + virtualMove - heroLastVirtualMove;
+            }
+            heroLastPhone = phone; heroLastForward = forward; heroLastVirtualMove = virtualMove; heroHasMotion = true;
+            var velocity = Fighter.Flat(step) / dt;
+            float rawSpeed = velocity.magnitude;
+            // 停下後立即歸零，避免平滑殘值讓原地旋轉繼續踏步；忽略定位的細小抖動。
+            if (rawSpeed < 0.12f) { heroSpeed = 0f; heroMoveW = Vector3.zero; return 0f; }
+            heroSpeed = Mathf.Lerp(heroSpeed, rawSpeed, 1f - Mathf.Exp(-dt * 6f));
+            heroMoveW = Vector3.Lerp(heroMoveW, velocity, 1f - Mathf.Exp(-dt * 10f));
+            return heroSpeed < 0.45f ? 0f : heroSpeed;
+        }
         /// <summary>角色現在要面對的方向（場地座標）：剛攻擊過＝準心的方向，否則＝手機面向</summary>
         Vector3 HeroFacing => Time.time < heroFaceUntil ? heroFaceDir : Fighter.Flat(Me.forward);
 
@@ -111,15 +138,11 @@ namespace SpellDuel
             {
                 if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; }
                 if (heroModel) { Destroy(heroModel.gameObject); heroModel = null; }
-                heroLastHp = -1f; return;
+                heroLastHp = -1f; heroHasMotion = false; heroSpeed = 0f; heroMoveW = Vector3.zero; return;
             }
             var adv = Progress.Char(myClass).adv;
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
-            float rawSpeed = Fighter.Flat(Me.Feet - selfLastFeet).magnitude / dt;
-            selfLastFeet = Me.Feet;
-            // 只有真的位移才走路（使用者：旋轉角度時不用動）：平滑後的速度、轉得快時（>40°/秒）不算，衝刺照算
-            heroSpeed = Mathf.Lerp(heroSpeed, rawSpeed, 1f - Mathf.Exp(-dt * 6f));
-            float speed = heroSpeed < 0.45f || (tpYawRate > 40f && !dashing) ? 0f : heroSpeed;
+            float speed = UpdateHeroMovement(dt);
             // 生成器的模型
             string kit = HeroModel.KitFor(myClass, adv);
             if (heroModel && heroModel.Kit != kit) { Destroy(heroModel.gameObject); heroModel = null; }
@@ -132,7 +155,6 @@ namespace SpellDuel
                 heroWasCharging = charging;
                 if (heroLastHp >= 0f && Me.hp < heroLastHp - 0.5f && Me.Alive && !charging) heroModel.PlayOnce("hit");
                 heroLastHp = Me.hp;
-                heroMoveW = Vector3.Lerp(heroMoveW, Fighter.Flat(Me.Feet - heroPrevFeet) / dt, 1f - Mathf.Exp(-dt * 10f)); heroPrevFeet = Me.Feet;
                 heroModel.Drive(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(HeroFacing), WorldFrame.DirFromWorld(heroMoveW), speed, !Me.Alive, charging, Me.crouching, Me.airborneUntil > battle.now, Time.time < heroFaceUntil);
                 return;
             }
@@ -145,7 +167,7 @@ namespace SpellDuel
                 selfRig.transform.localScale = selfRig.transform.localScale * HeroScale;
             }
             selfRig.SetPose(WorldFrame.FromWorld(Me.Feet), WorldFrame.DirFromWorld(HeroFacing));
-            selfRig.MoveSpeed = Mathf.Lerp(selfRig.MoveSpeed, speed, 0.2f);
+            selfRig.MoveSpeed = speed;
             selfRig.SetDead(!Me.Alive);
             selfRig.Charge = Me.Alive && Me.charging != null ? Mathf.Clamp01((battle.now - Me.chargeStart) / Mathf.Max(0.3f, Me.charging.charge)) : 0f;
             selfRig.Guarding = Me.Alive && Me.crouching;
