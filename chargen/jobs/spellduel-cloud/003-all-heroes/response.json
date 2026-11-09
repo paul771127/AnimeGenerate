@@ -1,16 +1,15 @@
 {
   "schemaVersion": 1,
   "job": "003-all-heroes",
-  "status": "partial",
+  "status": "completed",
+  "ok": true,
   "completedClasses": [
     "mage",
     "swordsman",
     "archer",
     "assassin",
     "priest",
-    "novice"
-  ],
-  "pendingClasses": [
+    "novice",
     "paladin",
     "berserker",
     "marksman",
@@ -21,30 +20,69 @@
     "bishop",
     "inquisitor"
   ],
-  "batch1": {
-    "classes": [
-      "mage",
-      "swordsman",
-      "archer",
-      "assassin",
-      "priest",
-      "novice"
-    ],
-    "perClassClips": 17,
-    "fps": 30,
-    "unityValidated": true
-  },
+  "pendingClasses": [],
+  "batches": [
+    {
+      "number": 1,
+      "classes": [
+        "mage",
+        "swordsman",
+        "archer",
+        "assassin",
+        "priest",
+        "novice"
+      ],
+      "commitSha": "98bae7cd69c17f5b9fab4b04232575770f353c69"
+    },
+    {
+      "number": 2,
+      "classes": [
+        "paladin",
+        "berserker",
+        "marksman",
+        "ranger",
+        "summoner",
+        "ninja",
+        "shadowdancer",
+        "bishop",
+        "inquisitor"
+      ]
+    }
+  ],
+  "perClassClips": 17,
+  "totalNewClips": 255,
+  "fps": 30,
+  "bodyTriangleRange": [
+    9180,
+    11650
+  ],
+  "unityVersion": "2022.3.62f2",
+  "allHumanoidValid": true,
+  "sampledPoses": 765,
+  "rootTranslationMaxMeters": 0,
+  "standaloneImportHelper": "Compiled/executed for all 15 kits with 17 clips and additional weapon curves retained",
   "runtimeChanged": false,
   "noMeta": true,
   "noShader": true,
   "noPrefab": true,
   "importInstructions": "UNITY_IMPORT.md",
+  "licenseNotes": "LICENSE_NOTES.md",
   "perClassResponses": {
     "mage": "mage/response.json",
     "swordsman": "swordsman/response.json",
     "archer": "archer/response.json",
     "assassin": "assassin/response.json",
     "priest": "priest/response.json",
-    "novice": "novice/response.json"
-  }
+    "novice": "novice/response.json",
+    "paladin": "paladin/response.json",
+    "berserker": "berserker/response.json",
+    "marksman": "marksman/response.json",
+    "ranger": "ranger/response.json",
+    "summoner": "summoner/response.json",
+    "ninja": "ninja/response.json",
+    "shadowdancer": "shadowdancer/response.json",
+    "bishop": "bishop/response.json",
+    "inquisitor": "inquisitor/response.json"
+  },
+  "mobileProfile": "not_measured"
 }

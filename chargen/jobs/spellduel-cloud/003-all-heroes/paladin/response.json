@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "job": "003-all-heroes",
+  "id": "paladin",
+  "title": "聖騎士",
+  "ok": true,
+  "status": "completed",
+  "output": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/paladin_v1/",
+  "files": [
+    {
+      "name": "paladin.fbx",
+      "bytes": 6301308,
+      "sha256": "4c24b9dd51ddef476e490c965db4ba79fcdc7eaf7649978fc2458fe680f00ffd"
+    },
+    {
+      "name": "paladin_albedo.png",
+      "bytes": 844854,
+      "sha256": "92e789ea51bf21ea66bc6555920c12811ca0f8e9bbe6d276a240ea7ef009f821"
+    },
+    {
+      "name": "paladin_emission.png",
+      "bytes": 21382,
+      "sha256": "8dc693d8f11aba58d645c51076db786c1610580507c5293cbd377639135b278a"
+    }
+  ],
+  "appearance": {
+    "style": "Japanese anime cel shaded with inverted-hull OUTLINE mesh",
+    "reference": "spellduel-unity/Assets/SpellDuel/Resources/Story2D/classes/paladin.png",
+    "design": "Royal blue and white tabard, silver/gold plate armor including greaves, chained mantle, gold-rimmed white/blue kite shield and sword",
+    "referenceComparison": "previews/reference_comparison.png",
+    "bodyHeightMeters": 1.72,
+    "headgearAdditionalHeight": false
+  },
+  "geometry": {
+    "bodyTriangles": 11650,
+    "outlineTriangles": 5846,
+    "materials": 2,
+    "bones": 61,
+    "maxInfluences": 4,
+    "neutralFeetY": -1.862645149230957e-09,
+    "axis": "Y-up, front +Z, meters"
+  },
+  "weaponParents": {
+    "Weapon_R": "J_Bip_R_Hand",
+    "Shield": "J_Bip_L_Hand"
+  },
+  "animations": [
+    {
+      "name": "idle",
+      "seconds": 2.5,
+      "frames": 76,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_back",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_left",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_right",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_back",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_left",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_right",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "attack",
+      "seconds": 0.8,
+      "frames": 25,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "skill",
+      "seconds": 1.0,
+      "frames": 31,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "skill_loop",
+      "seconds": 1.6,
+      "frames": 49,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "hit",
+      "seconds": 0.4,
+      "frames": 13,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "crouch",
+      "seconds": 2.933333333333333,
+      "frames": 89,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "jump",
+      "seconds": 0.8,
+      "frames": 25,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "die",
+      "seconds": 2.3666666666666667,
+      "frames": 72,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "victory",
+      "seconds": 2.0,
+      "frames": 61,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    }
+  ],
+  "qa": {
+    "unityVersion": "2022.3.62f2",
+    "humanoidValid": true,
+    "humanoidHuman": true,
+    "clipCount": 17,
+    "sampledPoses": 51,
+    "rootTranslationMaxMeters": 0.0,
+    "maxHandSkinDistanceMeters": 0.1701696664094925,
+    "loopMarkerSeamMeters": {
+      "walk_left": 8.800520336767078e-07,
+      "walk_right": 1.0498711439256987e-06,
+      "crouch": 1.7631291696726132e-07,
+      "run_left": 4.6552715753952587e-07,
+      "idle": 2.1490760299348766e-07,
+      "walk": 9.884312124119401e-07,
+      "skill_loop": 2.7314279645418166e-07,
+      "run_right": 5.535535699429127e-07,
+      "walk_back": 8.885891148969873e-07,
+      "run": 3.6863436927953305e-07,
+      "run_back": 5.535535699429127e-07
+    },
+    "visualReview": "Actual imported Unity front/back/third-person and 17-pose contact sheet reviewed",
+    "mobileProfile": "not_measured"
+  },
+  "previews": [
+    "previews/animation_contact.png",
+    "previews/attack.gif",
+    "previews/attack.png",
+    "previews/back.png",
+    "previews/front.png",
+    "previews/reference_comparison.png",
+    "previews/third_person.png"
+  ],
+  "sources": "sources.json",
+  "noShader": true,
+  "noMeta": true,
+  "noPrefab": true,
+  "runtimeChanged": false,
+  "limitations": [
+    "Mobile FPS/thermal tests and full game transitions were not measured; previews come from an isolated Unity 2022.3.62f2 import using the shared game shaders.",
+    "Clothing uses the existing skinned-bone approach without cloth simulation.",
+    "Full Humanoid transform mask is required to retain weapon/book/string/arrow curves; see ../UNITY_IMPORT.md.",
+    "The attack GIF repeats for review; the source attack and skill clips are non-looping."
+  ]
+}

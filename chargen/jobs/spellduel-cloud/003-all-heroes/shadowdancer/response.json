@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "job": "003-all-heroes",
+  "id": "shadowdancer",
+  "title": "影舞者",
+  "ok": true,
+  "status": "completed",
+  "output": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/shadowdancer_v1/",
+  "files": [
+    {
+      "name": "shadowdancer.fbx",
+      "bytes": 6244636,
+      "sha256": "45681f239ec5fcb802e9925f38906ab73b4bdd4feac80d9c6e5c6e7b97126f71"
+    },
+    {
+      "name": "shadowdancer_albedo.png",
+      "bytes": 844860,
+      "sha256": "3560eb6646edc4a7d7653c047bca109e6ae4bbef1548ed815951b611a6f537c0"
+    },
+    {
+      "name": "shadowdancer_emission.png",
+      "bytes": 21382,
+      "sha256": "7156f38a4b5548fdc557df96dc0f2fb66008a0bc633bdec9ba52c5f9441113a7"
+    }
+  ],
+  "appearance": {
+    "style": "Japanese anime cel shaded with inverted-hull OUTLINE mesh",
+    "reference": "spellduel-unity/Assets/SpellDuel/Resources/Story2D/classes/shadowdancer.png",
+    "design": "Plum and violet split-tail leather coat, magenta lining and ribbons, black undersuit, paired hooked green-edged blades; shadow double is a separate skill effect",
+    "referenceComparison": "previews/reference_comparison.png",
+    "bodyHeightMeters": 1.72,
+    "headgearAdditionalHeight": false
+  },
+  "geometry": {
+    "bodyTriangles": 9556,
+    "outlineTriangles": 4650,
+    "materials": 2,
+    "bones": 61,
+    "maxInfluences": 4,
+    "neutralFeetY": -1.862645149230957e-09,
+    "axis": "Y-up, front +Z, meters"
+  },
+  "weaponParents": {
+    "Weapon_R": "J_Bip_R_Hand",
+    "Weapon_L": "J_Bip_L_Hand"
+  },
+  "animations": [
+    {
+      "name": "idle",
+      "seconds": 2.5,
+      "frames": 76,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_back",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_left",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_right",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_back",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_left",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_right",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "attack",
+      "seconds": 0.8,
+      "frames": 25,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "skill",
+      "seconds": 1.0,
+      "frames": 31,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "skill_loop",
+      "seconds": 1.6,
+      "frames": 49,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "hit",
+      "seconds": 0.4,
+      "frames": 13,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "crouch",
+      "seconds": 2.933333333333333,
+      "frames": 89,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "jump",
+      "seconds": 0.8,
+      "frames": 25,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "die",
+      "seconds": 2.3666666666666667,
+      "frames": 72,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "victory",
+      "seconds": 2.0,
+      "frames": 61,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    }
+  ],
+  "qa": {
+    "unityVersion": "2022.3.62f2",
+    "humanoidValid": true,
+    "humanoidHuman": true,
+    "clipCount": 17,
+    "sampledPoses": 51,
+    "rootTranslationMaxMeters": 0.0,
+    "maxHandSkinDistanceMeters": 0.1701696664094925,
+    "loopMarkerSeamMeters": {
+      "walk_left": 8.800520336767078e-07,
+      "walk_right": 1.0498711439256987e-06,
+      "crouch": 1.7631291696726132e-07,
+      "run_left": 7.077659420393656e-07,
+      "idle": 2.9839552036674004e-07,
+      "walk": 9.884312124119401e-07,
+      "skill_loop": 3.5294053799888523e-07,
+      "run_right": 5.967910407334801e-07,
+      "walk_back": 8.885891148969873e-07,
+      "run": 5.272569064186255e-07,
+      "run_back": 5.967910407334801e-07
+    },
+    "visualReview": "Actual imported Unity front/back/third-person and 17-pose contact sheet reviewed",
+    "mobileProfile": "not_measured"
+  },
+  "previews": [
+    "previews/animation_contact.png",
+    "previews/attack.gif",
+    "previews/attack.png",
+    "previews/back.png",
+    "previews/front.png",
+    "previews/reference_comparison.png",
+    "previews/third_person.png"
+  ],
+  "sources": "sources.json",
+  "noShader": true,
+  "noMeta": true,
+  "noPrefab": true,
+  "runtimeChanged": false,
+  "limitations": [
+    "Mobile FPS/thermal tests and full game transitions were not measured; previews come from an isolated Unity 2022.3.62f2 import using the shared game shaders.",
+    "Clothing uses the existing skinned-bone approach without cloth simulation.",
+    "Full Humanoid transform mask is required to retain weapon/book/string/arrow curves; see ../UNITY_IMPORT.md.",
+    "The attack GIF repeats for review; the source attack and skill clips are non-looping.",
+    "Portrait companions/summons/shadow duplicates are gameplay entities and are not welded into the player mesh."
+  ]
+}

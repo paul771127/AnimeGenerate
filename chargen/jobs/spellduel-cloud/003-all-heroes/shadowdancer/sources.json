@@ -1,0 +1,52 @@
+[
+  {
+    "id": "anime-head-rig",
+    "author": "pixiv Inc. / VRoid Project",
+    "asset": "Legacy HairSample_Male (not VRoidPreset_A-Z)",
+    "license": "CC0-1.0",
+    "commercialUse": true,
+    "modification": true,
+    "gameRedistribution": true,
+    "royalties": false,
+    "userLimit": null,
+    "primaryLicenseUrl": "https://vroid.pixiv.help/hc/en-us/articles/4402614652569",
+    "fileSha256": "7aeca142dabbc26ba0f5b9c998c8f3cb6df341287d67788427ac837223785a3f",
+    "downloadUrl": "https://raw.githubusercontent.com/madjin/vrm-samples/master/vroid/beta/HairSample_Male.vrm"
+  },
+  {
+    "id": "animation-library",
+    "author": "Quaternius",
+    "asset": "Universal Animation Library Standard, free subset",
+    "license": "CC0-1.0",
+    "primaryLicenseUrl": "https://quaternius.com/packs/universalanimationlibrary.html",
+    "commercialUse": true,
+    "modification": true,
+    "gameRedistribution": true,
+    "royalties": false,
+    "userLimit": null,
+    "sourceSha256": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+    "downloadUrl": "https://github.com/J-Ponzo/gltf-universal-animation-library"
+  },
+  {
+    "id": "job003-original-authoring",
+    "asset": "Class-specific clothing, layered armor, hoods/capes, equipment, UV palette, weapon attack/skill/charge and palm attachment curves",
+    "origin": "Project-authored Blender mesh and animation data",
+    "license": "LicenseRef-ProjectOriginal",
+    "classId": "shadowdancer",
+    "design": "Plum and violet split-tail leather coat, magenta lining and ribbons, black undersuit, paired hooked green-edged blades; shadow double is a separate skill effect"
+  },
+  {
+    "id": "shared-project-rig-and-locomotion",
+    "origin": "Work orders 001 + 002 in this repository",
+    "fbxPath": "spellduel-unity/Assets/SpellDuel/Resources/CharKit/archmage_v1/archmage.fbx",
+    "fbxSha256": "6b19a8d3121285dea03d7aa10e2ec653806bd67e2c73314bb400e97d78a0e24c",
+    "authoringSceneSha256": "7ba1d94fdc754e1820330f4052186b15e0a5068202a3ee30b44c48c9eef82f81",
+    "license": "CC0-1.0 source plus project-original animation edits"
+  },
+  {
+    "id": "project-portrait-reference",
+    "path": "spellduel-unity/Assets/SpellDuel/Resources/Story2D/classes/shadowdancer.png",
+    "sha256": "66d4fcbf55ae9954c6768d9f269a41a2d4976e39f8126b0bb63ecc9d95254634",
+    "origin": "Existing project reference designated by the user; not relabeled CC0; portrait pixels are not projected onto the model"
+  }
+]

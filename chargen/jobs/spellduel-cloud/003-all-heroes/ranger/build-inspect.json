@@ -1,0 +1,223 @@
+{
+  "id": "ranger",
+  "title": "遊俠",
+  "bodyTriangles": 10242,
+  "outlineTriangles": 4962,
+  "boneCount": 63,
+  "heightMeters": 1.71999990940094,
+  "baseBodyHeightMeters": 1.72,
+  "hasHeadgear": false,
+  "scale": 1.0261891376292671,
+  "footOffsetDesign": 0.03140471224887935,
+  "animations": [
+    {
+      "name": "idle",
+      "seconds": 2.5,
+      "frames": 76,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_back",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_left",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "walk_right",
+      "seconds": 1.3333333333333333,
+      "frames": 41,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_back",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_left",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "run_right",
+      "seconds": 0.6666666666666666,
+      "frames": 21,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "attack",
+      "seconds": 0.8,
+      "frames": 25,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "skill",
+      "seconds": 1.0,
+      "frames": 31,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "skill_loop",
+      "seconds": 1.6,
+      "frames": 49,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "hit",
+      "seconds": 0.4,
+      "frames": 13,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "crouch",
+      "seconds": 2.933333333333333,
+      "frames": 89,
+      "fps": 30,
+      "loop": true,
+      "inPlace": true
+    },
+    {
+      "name": "jump",
+      "seconds": 0.8,
+      "frames": 25,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "die",
+      "seconds": 2.3666666666666667,
+      "frames": 72,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    },
+    {
+      "name": "victory",
+      "seconds": 2.0,
+      "frames": 61,
+      "fps": 30,
+      "loop": false,
+      "inPlace": true
+    }
+  ],
+  "bones": [
+    "Root",
+    "J_Bip_C_Hips",
+    "J_Bip_C_Spine",
+    "J_Bip_C_Chest",
+    "J_Bip_C_UpperChest",
+    "J_Bip_C_Neck",
+    "J_Bip_C_Head",
+    "J_Adj_L_FaceEye",
+    "J_Adj_R_FaceEye",
+    "head",
+    "J_Bip_L_Shoulder",
+    "J_Bip_L_UpperArm",
+    "J_Bip_L_LowerArm",
+    "J_Bip_L_Hand",
+    "J_Bip_L_Index1",
+    "J_Bip_L_Index2",
+    "J_Bip_L_Index3",
+    "J_Bip_L_Little1",
+    "J_Bip_L_Little2",
+    "J_Bip_L_Little3",
+    "J_Bip_L_Middle1",
+    "J_Bip_L_Middle2",
+    "J_Bip_L_Middle3",
+    "J_Bip_L_Ring1",
+    "J_Bip_L_Ring2",
+    "J_Bip_L_Ring3",
+    "J_Bip_L_Thumb1",
+    "J_Bip_L_Thumb2",
+    "J_Bip_L_Thumb3",
+    "weapon_l",
+    "Weapon_L",
+    "J_Bip_R_Shoulder",
+    "J_Bip_R_UpperArm",
+    "J_Bip_R_LowerArm",
+    "J_Bip_R_Hand",
+    "J_Bip_R_Index1",
+    "J_Bip_R_Index2",
+    "J_Bip_R_Index3",
+    "J_Bip_R_Little1",
+    "J_Bip_R_Little2",
+    "J_Bip_R_Little3",
+    "J_Bip_R_Middle1",
+    "J_Bip_R_Middle2",
+    "J_Bip_R_Middle3",
+    "J_Bip_R_Ring1",
+    "J_Bip_R_Ring2",
+    "J_Bip_R_Ring3",
+    "J_Bip_R_Thumb1",
+    "J_Bip_R_Thumb2",
+    "J_Bip_R_Thumb3",
+    "weapon_r",
+    "Weapon_R",
+    "BowNock",
+    "Arrow",
+    "chest",
+    "J_Bip_L_UpperLeg",
+    "J_Bip_L_LowerLeg",
+    "J_Bip_L_Foot",
+    "J_Bip_L_ToeBase",
+    "J_Bip_R_UpperLeg",
+    "J_Bip_R_LowerLeg",
+    "J_Bip_R_Foot",
+    "J_Bip_R_ToeBase"
+  ],
+  "weaponParents": {
+    "Weapon_R": "J_Bip_R_Hand",
+    "Weapon_L": "J_Bip_L_Hand",
+    "BowNock": "J_Bip_R_Hand",
+    "Arrow": "J_Bip_R_Hand"
+  },
+  "rootChannelsAbsent": true,
+  "design": "Leaf-embroidered green hood/cloak, cream shirt, asymmetrical leather straps and pouches, wrist bracers and recurve bow; bird is portrait companion, not welded to character"
+}

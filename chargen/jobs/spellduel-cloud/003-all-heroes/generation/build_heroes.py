@@ -433,7 +433,10 @@ class Hero:
   body=[self.face,self.hair,self.hands]+self.made
   for obj in body:
    if obj not in [self.face,self.hair,self.hands]:
-    bm=bmesh.new();bm.from_mesh(obj.data);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(obj.data);bm.free()
+    bm=bmesh.new();bm.from_mesh(obj.data)
+    if self.c.get('solidSurfaces') and any(e.is_boundary for e in bm.edges):
+     bmesh.ops.solidify(bm,geom=list(bm.faces),thickness=.002)
+    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(obj.data);bm.free()
    obj.data.calc_loop_triangles()
    for p in obj.data.polygons:p.use_smooth=obj in [self.face,self.hair,self.hands] or any(x in obj.name for x in ['Sleeve','Trousers','Neck'])
   triangles=sum(len(o.data.loop_triangles) for o in body)
@@ -441,7 +444,7 @@ class Hero:
   black=bpy.data.materials.new(self.id+'_Outline');black.use_nodes=True;black.use_backface_culling=True;black.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=(.01,.008,.016,1)
   shells=[]
   for o in body:
-   if o in [self.face,self.hands] or any(s in o.name for s in ['Piping','Border','Embroidery','Seam','GoldRidge','String','Arrow','Buckle','Stud','Chain','Rim','Edge','Grain','FocusClaw','MetalBand','Stitch','Cross','Gem','Lining','Claw','Ray','Blade']):continue
+   if o in [self.face,self.hands] or any(s in o.name for s in ['Piping','Border','Embroidery','Seam','GoldRidge','String','Arrow','Buckle','Stud','Chain','Rim','Edge','Grain','FocusClaw','MetalBand','Stitch','Cross','Gem','Lining','Claw','Ray','Blade','Shield']):continue
    shell=o.copy();shell.data=o.data.copy();shell.name='OUTLINE_'+o.name;bpy.context.scene.collection.objects.link(shell)
    for v in shell.data.vertices:v.co+=v.normal*.008
    bm=bmesh.new();bm.from_mesh(shell.data);bmesh.ops.reverse_faces(bm,faces=list(bm.faces));bm.to_mesh(shell.data);bm.free();shell.data.materials.clear();shell.data.materials.append(black);shells.append(shell)
