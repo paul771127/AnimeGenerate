@@ -57,6 +57,15 @@ jobs:
           dotnet: true
           haskell: true
           large-packages: false
+      # IL2CPP 編譯 C++ 很吃記憶體：16GB 的機器曾被砍掉（exit code 137）→ 加 12GB swap
+      - name: 加大虛擬記憶體（swap）
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 12G /mnt/swapfile2 || sudo dd if=/dev/zero of=/mnt/swapfile2 bs=1M count=12288
+          sudo chmod 600 /mnt/swapfile2
+          sudo mkswap /mnt/swapfile2
+          sudo swapon /mnt/swapfile2
+          free -h
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
