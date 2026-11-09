@@ -59,9 +59,11 @@ namespace SpellDuel
             var f = Fighter.Flat(me.forward);
             if (f.sqrMagnitude < 1e-4f) f = tpHas ? tpLastFwd : Vector3.forward;
             f.Normalize();
+            TrackYaw(f, Mathf.Max(1e-3f, Time.deltaTime));
             if (tpHas)
             {
-                var delta = -(TpOffset(f) - TpOffset(tpLastFwd));
+                // 原地轉身時手機會繞著身體畫一小段弧（手臂長）：也一起扣掉，角色才不會跟著挪（使用者：旋轉時不用動）
+                var delta = -(TpOffset(f) - TpOffset(tpLastFwd)) - (f - tpLastFwd) * TpArm;
                 if (delta.sqrMagnitude > 0.004f * 0.004f)   // 手機微微晃動不平移（省效能）；累積夠了才一次移
                 {
                     ShiftWorld(-WorldFrame.DirFromWorld(delta));
@@ -75,6 +77,16 @@ namespace SpellDuel
             me.head += tpOffsetW;
         }
 
+        /// <summary>手機離身體的距離（轉身時手機畫的弧半徑）</summary>
+        const float TpArm = 0.3f;
+        /// <summary>手機轉向的速度（度／秒，平滑過）：轉得快時不算走路</summary>
+        float tpYawRate; Vector3 tpYawPrev;
+        void TrackYaw(Vector3 f, float dt)
+        {
+            if (tpYawPrev.sqrMagnitude > 0.5f) tpYawRate = Mathf.Lerp(tpYawRate, Vector3.Angle(tpYawPrev, f) / Mathf.Max(1e-3f, dt), 1f - Mathf.Exp(-dt * 8f));
+            tpYawPrev = f;
+        }
+
         /// <summary>角色相對手機的位置：前方 ThirdPersonDist、往左 ThirdPersonSide</summary>
         static Vector3 TpOffset(Vector3 f) => f * ThirdPersonDist - new Vector3(f.z, 0f, -f.x) * ThirdPersonSide;
 
@@ -86,7 +98,7 @@ namespace SpellDuel
             else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
         }
         float heroCastAnimAt = -9f, heroFaceUntil = -9f;
-        Vector3 heroAimDir, heroFaceDir, heroMoveW, heroPrevFeet;
+        Vector3 heroAimDir, heroFaceDir, heroMoveW, heroPrevFeet; float heroSpeed;
         /// <summary>角色現在要面對的方向（場地座標）：剛攻擊過＝準心的方向，否則＝手機面向</summary>
         Vector3 HeroFacing => Time.time < heroFaceUntil ? heroFaceDir : Fighter.Flat(Me.forward);
 
@@ -103,8 +115,11 @@ namespace SpellDuel
             }
             var adv = Progress.Char(myClass).adv;
             float dt = Mathf.Max(1e-3f, Time.deltaTime);
-            float speed = Fighter.Flat(Me.Feet - selfLastFeet).magnitude / dt;
+            float rawSpeed = Fighter.Flat(Me.Feet - selfLastFeet).magnitude / dt;
             selfLastFeet = Me.Feet;
+            // 只有真的位移才走路（使用者：旋轉角度時不用動）：平滑後的速度、轉得快時（>40°/秒）不算，衝刺照算
+            heroSpeed = Mathf.Lerp(heroSpeed, rawSpeed, 1f - Mathf.Exp(-dt * 6f));
+            float speed = heroSpeed < 0.45f || (tpYawRate > 40f && !dashing) ? 0f : heroSpeed;
             // 生成器的模型
             string kit = HeroModel.KitFor(myClass, adv);
             if (heroModel && heroModel.Kit != kit) { Destroy(heroModel.gameObject); heroModel = null; }
