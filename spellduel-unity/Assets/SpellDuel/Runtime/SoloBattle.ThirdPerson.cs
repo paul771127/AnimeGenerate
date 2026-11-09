@@ -85,10 +85,11 @@ namespace SpellDuel
         static Vector3 TpOffset(Vector3 f) => f * ThirdPersonDist - new Vector3(f.z, 0f, -f.x) * ThirdPersonSide;
 
         /// <summary>放招／普攻的動作（使用者回報大魔導師攻擊沒動作：以前只有詠唱放出才播，普攻沒有）。普攻播快一點</summary>
+        // 普攻＝attack（劍士揮砍、獵人射箭…）；沒有 attack 動作就用施法動作加速播
         void HeroAttackAnim(bool basic)
         {
             if (heroAimDir.sqrMagnitude > 0.5f) { heroFaceDir = heroAimDir; heroFaceUntil = Time.time + 1.2f; }   // 轉向準心對的方向攻擊
-            if (heroModel) { heroModel.PlayOnce(basic ? "attack" : "cast", basic ? (heroModel.Has("attack") ? 1f : 2.2f) : 1.3f);   // 普攻＝attack（劍士揮砍、獵人射箭…），沒有就用施法動作加速 heroCastAnimAt = Time.time; }
+            if (heroModel) { heroModel.PlayOnce(basic ? "attack" : "cast", basic ? (heroModel.Has("attack") ? 1f : 2.2f) : 1.3f); heroCastAnimAt = Time.time; }
             else if (selfRig) { selfRig.PlayAttack(myClass == Skills.Novice ? "novice" : AttackKindOf(myClass), basic ? 0.06f : 0.15f); }
         }
         float heroCastAnimAt = -9f, heroFaceUntil = -9f;
