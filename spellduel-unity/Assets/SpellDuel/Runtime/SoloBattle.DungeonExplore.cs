@@ -43,6 +43,7 @@ namespace SpellDuel
             battle.themeOverride = dungeon.ThemeOf(run.map.areas[0].node);
             ExHookBattle();
             Ticker(ExLines($"📜 {run.Objective}"));
+            if (dungeon.style == "stage") StageMapBegin(run);   // 故事小關的地圖：支線 NPC、隱藏的星星、石碑（SoloBattle.StageMaps.cs）
             if (dungeon.IsChapter) ChapterBegin(run);   // 第一大關：脫出點、支線 NPC、岩漿、存檔（SoloBattle.Chapter.cs）
         }
 
@@ -77,7 +78,7 @@ namespace SpellDuel
             }
             // 主機：隊友走進區域也算（照他們的位置更新）
             if (coop) foreach (var al in battle.allies) if (al != null && al.Alive) run.Update(al.Feet, null);
-            if (dungeon.IsChapter) ChapterHoldStarts(run);   // 支線地點：接了任務才開始
+            if (dungeon.IsChapter || dungeon.style == "stage") ChapterHoldStarts(run);   // 支線地點：接了任務才開始
             foreach (var a in run.areaStarts) exNodeQueue.Enqueue(a);
             run.areaStarts.Clear();
             while (exNodeArea == null && bossIntroArea == null && exNodeQueue.Count > 0) StartAreaNode(run, exNodeQueue.Dequeue());

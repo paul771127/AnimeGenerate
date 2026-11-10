@@ -210,7 +210,7 @@ namespace SpellDuel
                     int k = FixedDungeonSpawns ? DungeonMinionKind(4) : PickMinionKind(MinionRole.Back);
                     var at = edgePointAt != null ? edgePointAt(180f) : RandomInsidePoint(Ring(ArenaInner(), 180f));
                     evHunt = SpawnMinion(at, 0, k, HpMul * 1.5f, DmgMul, SpeedMul);
-                    MakeElite(evHunt); evHunt.huntTarget = true; evHunt.name = "目標・" + evHunt.name;
+                    MakeElite(evHunt); evHunt.huntTarget = true; evHunt.name = "目標・" + P("name", evHunt.name);
                     evLinked.Add(evHunt);
                     if(evCoop)for(int i=1;i<PlayersN;i++)
                     {

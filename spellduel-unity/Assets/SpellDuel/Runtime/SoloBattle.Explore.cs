@@ -107,6 +107,7 @@ namespace SpellDuel
                 if (run.IsDungeon) UpdateStoryMaze(run);   // 故事的探索／護送玩法（SoloBattle.StoryModes.cs）
                 UpdateBodyGates(run);   // 跳、蹲、側步的身體障礙（SoloBattle.BodyGates.cs）
                 if (run.IsDungeon && dungeon != null && dungeon.IsChapter) UpdateChapter(run, dt);   // 第一大關（SoloBattle.Chapter.cs）
+                if (run.IsDungeon && dungeon != null && dungeon.style == "stage") UpdateStageMap(run, dt);   // 故事小關的地圖（SoloBattle.StageMaps.cs）
                 if (run.IsDungeon) ExRecallStuck(run);   // 卡在遠處的區域守衛：30 秒後叫到玩家附近
                 ExTapSparkles();
             }

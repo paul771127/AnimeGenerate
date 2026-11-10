@@ -4374,6 +4374,7 @@ namespace SpellDuel
             DrawDangerHud(W, H);
             DrawActionCue(W, H);   // 鏡像試煉的動作卡、路上身體障礙的「跳／蹲／閃」提示（SoloBattle.ActionCue.cs）
             DrawChestPopup(W, H);   // 寶箱：拿到什麼（SoloBattle.ChestArt.cs）
+            DrawStageMapHud(W, H);   // 故事小關的地圖：找到幾顆星星（SoloBattle.StageMaps.cs）
             DrawChapterHud(W, H);   // 第一大關：脫出點（存檔回村）、岩漿與落石的提示（SoloBattle.Chapter.cs）   // 站在敵人蓄力中的攻擊範圍裡：畫面邊緣發紅光（SoloBattle.DangerHud.cs）
             DrawGamble(W, H);   // 鬥場賭局：選詛咒卡
             DrawArenaHud(W, H);       // 故事：隊長的旗子、增援方向（SoloBattle.ArenaProps.cs）

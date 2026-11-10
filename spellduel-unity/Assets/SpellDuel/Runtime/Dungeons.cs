@@ -8,7 +8,9 @@ namespace SpellDuel
     public class DungeonRoom
     {
         /// <summary>特殊地點可以寫的設定</summary>
-        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet", "exit" };
+        public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet", "exit",
+            // 故事小關的地圖（stage_maps.txt）：支線任務、隱藏彩蛋
+            "side", "sidedesc", "giver", "giverlook", "offer", "thanks", "gold", "xp", "rarity", "secret", "secret2" };
         /// <summary>地點 id（地圖用；[room] 沒寫就是 r1、r2…）</summary>
         public string id;
         /// <summary>事件：battle 戰鬥、chest 寶箱（不用打）、boss 首領（wave 是 10 的倍數就自動是首領）</summary>
@@ -162,8 +164,16 @@ namespace SpellDuel
         public static void Load(string text = null)
         {
             if (loaded && text == null) return;
-            if (text == null) { var ta = Resources.Load<TextAsset>("dungeons"); text = ta != null ? ta.text : ""; }
+            if (text == null)
+            {
+                var ta = Resources.Load<TextAsset>("dungeons"); text = ta != null ? ta.text : "";
+                var sm = Resources.Load<TextAsset>("stage_maps"); if (sm != null) text += "\n" + sm.text;   // 故事小關的地圖（使用者要求：大關拆回小關，每關一張短地圖）
+            }
             Parse(text);
+            // 故事小關的地圖、第一大關（已拆回小關）：不出現在副本清單
+            stageMaps.Clear();
+            foreach (var x in all) if (x.style == "stage") stageMaps[x.id] = x;
+            all.RemoveAll(x => x.style == "stage" || x.style == "chapter");
             if (!DevSeed.IsDevApp(Application.identifier)) all.RemoveAll(x => x.id.StartsWith("lab_"));   // 玩法實驗室：只在開發版
             loaded = true;
         }
@@ -343,7 +353,7 @@ namespace SpellDuel
                     if (!seen.Add(r)) return;
                     stack.Add(r);
                     var ex = dd.ExitsOf(r);
-                    if (ex.Count == 0 && !r.IsBoss) errors.Add($"副本 {dd.id}：地點 {r.id} 沒有 next，但不是首領（終點一定要是首領）");
+                    if (ex.Count == 0 && !r.IsBoss && dd.style != "stage") errors.Add($"副本 {dd.id}：地點 {r.id} 沒有 next，但不是首領（終點一定要是首領）");
                     foreach (var e in ex) Walk(e);
                     stack.Remove(r);
                 }
@@ -378,6 +388,9 @@ namespace SpellDuel
         public static bool IsCleared(string id) => Cleared.Contains(id);
         public static void MarkCleared(string id) { if (Cleared.Add(id)) Story.Set("sd_dungeon_clear", string.Join(",", Cleared)); }
         public static DungeonDef Get(string id) => All.Find(d => d.id == id);
+        static readonly Dictionary<string, DungeonDef> stageMaps = new Dictionary<string, DungeonDef>();
+        /// <summary>故事小關的地圖（stage_maps.txt 的 [dungeon stage_1-1]）；沒有＝null</summary>
+        public static DungeonDef StageMap(string stageId) { Load(); return stageMaps.TryGetValue("stage_" + stageId, out var d) ? d : null; }
 
     }
 }

@@ -17,7 +17,7 @@ namespace SpellDuel
         /// <summary>生存要撐幾秒：越後面的關卡越久</summary>
         public static int SurviveSecondsOf(StoryStage st) => st == null ? 90 : 75 + 5 * Mathf.Clamp(st.fromWave - 1, 0, 9);
 
-        bool StoryMazeMode(StoryStage st) => st != null && IsMapMode(st.mode) && !StoryCoop && !NetMode;
+        bool StoryMazeMode(StoryStage st) => st != null && (IsMapMode(st.mode) || StageMapFor(st) != null) && !StoryCoop && !NetMode;
 
         /// <summary>這一關的小地圖：地點名稱、事件照關卡挑；沒寫的關卡用通用的名稱</summary>
         static DungeonDef StoryMazeDef(StoryStage st)
@@ -65,7 +65,8 @@ namespace SpellDuel
         /// <summary>StartStageBattle 叫：探索、護送玩法開打</summary>
         void StartStoryMaze()
         {
-            var d = StoryMazeDef(storyStage);
+            var sm = StageMapFor(storyStage);
+            var d = sm != null ? StageMapDef(storyStage, sm) : StoryMazeDef(storyStage);   // 故事小關的地圖（stage_maps.txt，SoloBattle.StageMaps.cs）
             pendingDungeon = d;
             ClearRace(true);
             if (System.Array.IndexOf(TrackModes, d.storyMode) >= 0) pendingExplore = new ExploreRun(BuildRaceMap(d, storyStage));   // 賽跑、崩塌逃脫、追捕盜賊：跑道（SoloBattle.Race.cs）
@@ -90,6 +91,7 @@ namespace SpellDuel
         {
             storyEscort = null; storyTrail.Clear();
             var st = dungeon.story;
+            if (dungeon.style == "stage") { ClearMapModes(); StageMapHello(); return; }   // 故事小關的地圖（SoloBattle.StageMaps.cs）
             if (System.Array.IndexOf(TrackModes, dungeon.storyMode) >= 0) { BeginRace(dungeon.storyMode); return; }
             if (dungeon.storyMode == "stealth" || dungeon.storyMode == "quiet") { BeginStealth(); BeginMapMode(dungeon.storyMode); return; }
             if (BeginMapMode(dungeon.storyMode)) return;   // 鬼抓人、鑰匙、拆彈、黑暗、追蹤（SoloBattle.MapModes.cs）

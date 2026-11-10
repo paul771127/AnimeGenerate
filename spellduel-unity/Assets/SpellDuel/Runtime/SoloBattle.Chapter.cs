@@ -48,6 +48,10 @@ namespace SpellDuel
         static SkillDef chLavaSkill, chRockSkill;
 
         bool ChapterMode => dungeon != null && dungeon.IsChapter && exploreRun != null && exploreRun.IsDungeon && !coop && !NetMode;
+        /// <summary>這一次的支線（第一大關＝ChSides；故事小關的地圖＝地點寫的 side＝…，SoloBattle.StageMaps.cs）</summary>
+        readonly List<ChSide> chSides = new List<ChSide>();
+        /// <summary>有 NPC 支線的地圖：第一大關、故事小關的地圖（單人）</summary>
+        bool SideQuestMode => dungeon != null && (dungeon.IsChapter || dungeon.style == "stage") && exploreRun != null && exploreRun.IsDungeon && !coop && !NetMode;
 
         // ---------------------------------------------------------------- 存檔
         struct ChSave { public int exit; public HashSet<int> cleared, sparkles, entered, dead, explored; public Dictionary<string, ExQuestState> quests; }
@@ -135,17 +139,8 @@ namespace SpellDuel
                 ex.go.transform.SetParent(chRoot, false); ex.go.transform.localPosition = p; ex.go.SetActive(false);
                 chExits.Add(ex);
             }
-            // 支線 NPC：站在支線地點裡、靠進來的那一邊
-            foreach (var cs in ChSides)
-            {
-                var a = map.areas.Find(x => x.node.id == cs.node); if (a == null) continue;
-                chSideArea[cs.node] = a;
-                ExArea from = map.areas.Find(x => x.next.Contains(a.index));
-                var dir = from != null ? Fighter.Flat(from.center - a.center).normalized : Vector3.left;
-                var pos = a.center + dir * a.radius * 0.55f;
-                map.npcs.Add(new ExNpc { id = cs.npc, name = cs.name, look = cs.look, quest = cs.npc, pos = pos });
-                map.quests.Add(new ExQuest { id = cs.npc, title = "支線：" + cs.title, giver = cs.npc, kind = "side", desc = cs.desc, offer = cs.offer, thanks = cs.thanks, state = ExQuestState.Offered, gold = cs.gold, xp = cs.xp });
-            }
+            chSides.Clear(); chSides.AddRange(ChSides);
+            PlaceSideNpcs(map);
             BuildVents(map);
             StageKit.Decorate(map, chRoot);   // 首領的岩洞入口、遠景岩塊（場景生成器的 3D 零件）
             // 存檔：清過的地點、找過的寶物、支線進度；位置回到脫出點
@@ -168,10 +163,25 @@ namespace SpellDuel
             Say("🌋 第一大關・炎之山：清完發光的脫出點可以存檔回村；倒下會損失 30% 經驗，並從入口重新開始", 5f);
         }
 
+        /// <summary>支線 NPC：站在支線地點裡、靠進來的那一邊</summary>
+        void PlaceSideNpcs(ExploreMap map)
+        {
+            foreach (var cs in chSides)
+            {
+                var a = map.areas.Find(x => x.node.id == cs.node); if (a == null) continue;
+                chSideArea[cs.node] = a;
+                ExArea from = map.areas.Find(x => x.next.Contains(a.index));
+                var dir = from != null ? Fighter.Flat(from.center - a.center).normalized : Vector3.left;
+                var pos = a.center + dir * a.radius * 0.55f;
+                map.npcs.Add(new ExNpc { id = cs.npc, name = cs.name, look = cs.look, quest = cs.npc, pos = pos });
+                map.quests.Add(new ExQuest { id = cs.npc, title = "支線：" + cs.title, giver = cs.npc, kind = "side", desc = cs.desc, offer = cs.offer, thanks = cs.thanks, state = ExQuestState.Offered, gold = cs.gold, xp = cs.xp });
+            }
+        }
+
         void ClearChapter()
         {
             if (chRoot) Destroy(chRoot.gameObject);
-            chRoot = null; chRun = null; chExits.Clear(); chVents.Clear(); chRocks.Clear(); chHeld.Clear(); chSideArea.Clear();
+            chRoot = null; chRun = null; chSides.Clear(); chExits.Clear(); chVents.Clear(); chRocks.Clear(); chHeld.Clear(); chSideArea.Clear();
             chExitNear = null; chExitDeclined = null; chResumeAt = null;
         }
 
@@ -228,7 +238,7 @@ namespace SpellDuel
                 var c = new Vector2Int(x, z);
                 var a = map.areas.Find(q => q.exits.Contains(c)); if (a == null) continue;
                 chGateHintAt = Time.time + 6f;
-                var side = System.Array.Find(ChSides, q => q.node == a.node.id);
+                var side = chSides.Find(q => q.node == a.node.id);
                 string why = side != null ? $"這是支線「{side.title}」的出口：跟{side.name}接任務、完成之後才會打開（主線走另一扇門）"
                     : !a.entered ? $"先到「{a.Title}」"
                     : a.IsEvent ? $"完成「{a.Title}」的試煉才會打開" + (a == exNodeArea ? "（試煉進行中）" : "")
@@ -268,11 +278,11 @@ namespace SpellDuel
         /// <summary>UpdateDungeonExplore：支線地點在接任務之前不開始（等玩家跟 NPC 說話）</summary>
         void ChapterHoldStarts(ExploreRun run)
         {
-            if (!ChapterMode) return;
+            if (!SideQuestMode) return;
             for (int i = run.areaStarts.Count - 1; i >= 0; i--)
             {
                 var a = run.areaStarts[i];
-                var cs = System.Array.Find(ChSides, x => x.node == a.node.id); if (cs == null) continue;
+                var cs = chSides.Find(x => x.node == a.node.id); if (cs == null) continue;
                 var q = run.map.Quest(cs.npc);
                 if (q != null && q.state == ExQuestState.Active) continue;
                 run.areaStarts.RemoveAt(i);
@@ -283,7 +293,7 @@ namespace SpellDuel
 
         void UpdateSideQuests(ExploreRun run)
         {
-            foreach (var cs in ChSides)
+            foreach (var cs in chSides)
             {
                 if (!chSideArea.TryGetValue(cs.node, out var a)) continue;
                 var q = run.map.Quest(cs.npc); if (q == null) continue;
@@ -294,7 +304,7 @@ namespace SpellDuel
                     q.state = ExQuestState.Done;
                     Economy.Gold += cs.gold;
                     int ups = prof != null ? prof.AddXp(cs.xp) : 0;
-                    ItemGen.SetTheme = 0;
+                    ItemGen.SetTheme = battle.Theme;
                     var it = ItemGen.Make(dropRng, dungeon.level + battle.levelBoost, cs.rarity, myClass);
                     Progress.AddToBagOrMail(it, q.title);
                     if (prof != null) Progress.SaveChar(prof);
@@ -307,9 +317,9 @@ namespace SpellDuel
         /// <summary>支線進行中失敗（靶場沒打夠、核心被打壞…）：只算支線失敗，可以再跟 NPC 接一次；整個關卡不結束</summary>
         bool ChapterFailFilter(string why)
         {
-            if (!ChapterMode || exNodeArea == null || Me == null || !Me.Alive) return false;
+            if (!SideQuestMode || exNodeArea == null || Me == null || !Me.Alive) return false;
             var a = exNodeArea;
-            var cs = System.Array.Find(ChSides, x => x.node == a.node.id); if (cs == null) return false;
+            var cs = chSides.Find(x => x.node == a.node.id); if (cs == null) return false;
             var q = exploreRun.map.Quest(cs.npc); if (q != null) q.state = ExQuestState.Failed;
             exNodeArea = null; battle.CleanupRoomEvent(); battle.arenaPoly = exSavedPoly; battle.bossPoint = null;
             if (!chHeld.Contains(a)) chHeld.Add(a);
