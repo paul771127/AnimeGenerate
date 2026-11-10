@@ -153,6 +153,8 @@ namespace SpellDuel
             }
             // 走道藏的寶箱
             foreach (var sp in map.sparkles) if (sp.kind == "chest" && !sp.found) Icon(map.Cell(sp.pos), "🧰");
+            // 故事小關的機關：巨石、深坑、石門、火把／石板（SoloBattle.StagePuzzles.cs）
+            if (dungeon != null && dungeon.style == "stage") foreach (var (pos, icon) in StagePuzzleIcons()) Icon(map.Cell(pos), icon);
             // 存檔點（脫出點）：清完那個地點才會出現
             foreach (var e in chExits) if (e.area.cleared) Icon(map.Cell(e.pos), "🌀");
             // NPC：有任務可接／可交＝❗，其他＝💬

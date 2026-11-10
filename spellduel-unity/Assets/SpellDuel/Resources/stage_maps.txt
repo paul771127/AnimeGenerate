@@ -15,6 +15,7 @@ players = 1-1
 style = stage
 
 [node gate] 礦道口
+chat = 打瞌睡的礦工｜swordsman｜呼……呼……（他在礦道口睡著了）／……嗯？小鬼？哪裡？……呼……／我只是在「看守」礦道口，用耳朵看守。
 wave = 1
 next = drill
 secret = 礦工的塗鴉｜「三下，停一拍，再三下」／——炎之里礦工的平安暗號。聽到就回敲，告訴對方：我在這裡。
@@ -51,6 +52,7 @@ rarity = 2
 礦工阿岩［serious］：推到發光的板子上就好，小心旁邊的小鬼！
 
 [node shelter] 避難洞
+chat = 受傷的師父｜priest｜小鐵那孩子，背著我走了一整晚……／他說他沒亂跑。嗯，他只是「很有效率地」迷路了。
 wave = 2
 next = nook, exit
 secret = 刻在洞壁的字｜「焰，別再來找我們了。」／字跡很舊，像是四十年前刻的。
@@ -78,6 +80,7 @@ players = 1-1
 style = stage
 
 [node forge_gate] 赤爐口
+chat = 賣烤番薯的阿婆｜priest｜番薯要不要？用熔岩烤的，外焦內也焦。／年輕人，赤爐那麼熱，我這攤子根本不用生火。
 wave = 1
 next = rails
 <enter>
@@ -110,6 +113,7 @@ rarity = 2
 secret = 米菈的貨單｜「冷泉水三罐、繃帶一捆、老焰訂的……（被塗掉了）」
 
 [node furnace] 赤爐深處
+chat = 研究鐘文的學徒｜mage｜艾琳老師叫我抄鐘文，我抄成了午餐菜單。／「火照路」……我一直唸成「火燒褲」。
 wave = 2
 event = runes
 count = 4
@@ -140,6 +144,7 @@ players = 1-1
 style = stage
 
 [node altar_path] 祭道
+chat = 搬家中的村民｜swordsman｜老焰叫我們疏散，可是我的醃菜缸搬不動啊！／這缸醃了三年，比我兒子還大。
 wave = 1
 next = archive, totems
 <enter>
@@ -163,6 +168,7 @@ rarity = 3
 secret = 保命守則・第七條｜「鐘不響的時候，就自己敲。」
 
 [node totems] 黑晶圖騰
+chat = 發抖的礦工｜archer｜我、我才沒有怕！我是在跟圖騰比賽誰抖得比較快！
 wave = 2
 event = totems
 count = 3
@@ -192,14 +198,16 @@ players = 1-1
 style = stage
 
 [node flowers] 毒花叢
+chat = 花粉過敏的獵人｜archer｜哈啾！毒花……哈啾！我是來……哈啾！幫忙的……哈啾！
 wave = 1
-next = lamps
+next = lamps, mushroom
 <enter>
 楓（archer）［serious］：毒花把路封了。清開花叢，我來掛回帶路的葉燈。
 <clear>
 楓（archer）［smile］：路通了一段。葉燈小徑就在前面。
 
 [node lamps] 葉燈小徑
+chat = 會說話的蘑菇（其實是小葉躲在後面）｜archer｜我是森林的蘑菇大人……噗哧。／……你、你不要往後面看喔！
 wave = 2
 event = runes
 count = 4
@@ -232,6 +240,20 @@ secret2 = 小葉的塗鴉｜一艘小船，船上畫滿了星星。旁邊寫著�
 <enter>
 旁白：樹根下插著一排木牌，替沒回來的人留著位置。
 
+[node mushroom] 發光的蘑菇圈
+wave = 2
+event = rhythm
+count = 6
+side = 蘑菇圈的舞會
+giver = 跳舞的精靈
+giverlook = mage
+sidedesc = 跟著蘑菇的節拍成功出手 6 次
+offer = 蘑菇圈的舞會缺一個舞伴！跟著節拍跳……不對，跟著節拍打怪就好！
+thanks = 你的舞步跟打怪一模一樣！精靈們很滿意，這是舞會的獎品。
+gold = 300
+xp = 200
+rarity = 2
+
 [node road] 聚落外的林道
 wave = 3
 <enter>
@@ -245,6 +267,7 @@ players = 1-1
 style = stage
 
 [node bridge_a] 根橋入口
+chat = 收過橋費的松鼠（自稱）｜swordsman｜要過根橋，交三顆松果！……沒有？那兩顆也行。／好啦好啦，一顆。你走吧。
 wave = 1
 next = echo
 <enter>
@@ -275,10 +298,11 @@ xp = 250
 rarity = 3
 
 [node bridge] 搖晃的根橋
+chat = 恐高的樹精｜priest｜我在樹上住了三百年，最近才發現我恐高。
 wave = 2
 event = barrage
 time = 40
-next = cache, root_end
+next = cache, root_end, beehive
 <enter>
 旁白：根橋劇烈搖晃，枝條和碎石從兩邊掃過來！
 楓（archer）［serious］：低的跳、高的蹲——撐過去就到對岸了！
@@ -288,6 +312,20 @@ next = cache, root_end
 [node cache] 名冊的木匣
 event = chest
 secret = 名冊的第一頁｜四十年前的筆跡：「白帆號，船員十二人。」／下面只簽了十一個名字。
+
+[node beehive] 蜂窩下的樹洞
+wave = 2
+event = targets
+count = 10
+side = 楓的蜂蜜
+giver = 楓
+giverlook = archer
+sidedesc = 打中 10 隻巡邏的毒蜂（別打到搬花粉的蜜蜂）
+offer = 小葉想吃蜂蜜……可是毒蜂守著蜂窩。幫我射下牠們，綠色的是好蜜蜂，別打！
+thanks = 拿到了。……不要跟小葉說是我幫她拿的。
+gold = 350
+xp = 250
+rarity = 3
 
 [node root_end] 根橋彼端
 wave = 3
@@ -302,8 +340,9 @@ players = 1-1
 style = stage
 
 [node net] 黑晶根網
+chat = 守夜人學徒｜swordsman｜師父說守夜要睜大眼睛，我睜了一整晚，現在閉不起來了。
 wave = 1
-next = totem
+next = totem, owl
 <enter>
 翠［serious］：黑晶纏住了祭壇的根。先清開外圍。
 
@@ -335,6 +374,7 @@ event = chest
 secret = 翠的日記｜「我守著古碑四十年，卻一次也不敢讀到最後一行。」
 
 [node gate] 名字之門
+chat = 迷路的郵差｜archer｜請問「記名林・第三棵會說話的樹」怎麼走？／……每一棵都說自己是第三棵。
 wave = 2
 event = chant
 riddle = 載著星星、在故事裡沒有回港的小船叫什麼？
@@ -345,6 +385,20 @@ next = altar_out
 旁白：根網纏住的石門上，刻著一個問題。
 <clear>
 旁白：石門鬆開了根網。祭壇就在前面。
+
+[node owl] 貓頭鷹的樹洞
+wave = 2
+event = mirror
+count = 4
+side = 貓頭鷹的體操
+giver = 老貓頭鷹
+giverlook = priest
+sidedesc = 跟著貓頭鷹做動作
+offer = 咕。年輕人，守夜很累吧？跟我做體操——咕，蹲下、跳起來、往旁邊！
+thanks = 咕咕。很好，筋骨鬆開了。這是我撿到的亮晶晶的東西，送你。
+gold = 400
+xp = 300
+rarity = 3
 
 [node altar_out] 祭壇外圍
 wave = 3
@@ -361,6 +415,7 @@ players = 1-1
 style = stage
 
 [node pier] 碼頭
+chat = 退休的船長｜swordsman｜年輕人，我年輕時跟大海搏鬥過！／……後來大海贏了，我就退休了。
 wave = 1
 next = reef
 <enter>
@@ -371,7 +426,7 @@ wave = 1
 event = defend
 name = 港口的燈火
 hp = 900
-next = shell, tower_base
+next = shell, tower_base, net
 <enter>
 海斗［serious］：燈火放在這裡，別讓魔物撲滅它！
 <clear>
@@ -392,6 +447,7 @@ xp = 300
 rarity = 3
 
 [node tower_base] 舊塔底下
+chat = 燈塔的貓｜archer｜喵。（牠趴在一本寫著「白帆號」的日誌上，不肯讓開）／喵～（你摸了牠，牠決定原諒你）
 wave = 2
 event = chant
 riddle = 燈塔窗邊，留著半首什麼？
@@ -407,6 +463,20 @@ next = attic, tower
 event = chest
 secret = 澪的樂譜｜半首歌，後面空白。／角落寫著：「另一半，等回來再唱。」
 
+[node net] 纏住的漁網
+wave = 2
+event = push
+count = 2
+side = 解開漁網
+giver = 漁婦阿浪
+giverlook = archer
+sidedesc = 把卡住漁網的石頭推到發光處
+offer = 漁網被兩塊大石頭壓住了，我一個人推不動。幫個忙？
+thanks = 網拉起來了！今天的魚分你一半——開玩笑的，給你這個。
+gold = 450
+xp = 300
+rarity = 3
+
 [node tower] 舊塔頂
 wave = 3
 <enter>
@@ -420,6 +490,7 @@ players = 1-1
 style = stage
 
 [node pool] 水窪
+chat = 賣潮水的商人｜priest｜新鮮的潮水！一瓶一枚銅幣！／什麼？海裡就有？……那、那我的潮水比較潮。
 wave = 1
 next = tide
 <enter>
@@ -428,7 +499,7 @@ next = tide
 [node tide] 漲潮的沙洲
 wave = 2
 event = collapse
-next = wreck, guard
+next = wreck, guard, lighthouse
 <enter>
 旁白：潮水一陣一陣湧上沙洲。紅框亮起的地方會被淹沒！
 <clear>
@@ -449,6 +520,7 @@ xp = 350
 rarity = 3
 
 [node guard] 歸航道
+chat = 練習唱歌的水手｜swordsman｜♪白帆～歸來～……我只記得這兩句，剩下的都用哼的。
 wave = 2
 event = parry
 next = bottle, end
@@ -460,6 +532,19 @@ next = bottle, end
 [node bottle] 漂流瓶
 event = chest
 secret = 漂流瓶裡的信｜「如果有人撿到——請告訴炎之里的焰：我們沒有怪他。」
+
+[node lighthouse] 漂來的燈籠
+wave = 2
+event = fragile
+side = 送回燈籠
+giver = 燈塔看守
+giverlook = priest
+sidedesc = 把漂來的燈籠穩穩送到光圈
+offer = 這盞燈籠是白帆號的……四十年了才漂回來。拜託你，穩穩送到前面的光圈，別讓它熄了。
+thanks = 它還亮著……謝謝你。這是燈塔代代相傳的東西。
+gold = 500
+xp = 350
+rarity = 3
 
 [node end] 歸航道盡頭
 wave = 3
@@ -474,6 +559,7 @@ players = 1-1
 style = stage
 
 [node tidepool] 潮池
+chat = 跟螃蟹吵架的漁夫｜swordsman｜牠先夾我的！我只是夾回去而已！／……用嘴。
 wave = 1
 next = lamps
 <enter>
@@ -482,7 +568,7 @@ next = lamps
 [node lamps] 燈籠陣
 wave = 2
 event = koth
-next = crab, hall
+next = crab, hall, gull
 <enter>
 旁白：三座燈籠台，站上去就能點亮。魔物也想搶！
 <clear>
@@ -503,6 +589,7 @@ xp = 400
 rarity = 3
 
 [node hall] 鐘礁前廳
+chat = 學者模樣的海鷗（？）｜mage｜嘎！（牠啄了啄雕像上的元素符號，好像在教你）／嘎嘎！（意思大概是：用對屬性啦笨蛋）
 wave = 2
 event = elements
 next = shell_box, bellmouth
@@ -514,6 +601,20 @@ next = shell_box, bellmouth
 [node shell_box] 貝殼盒子
 event = chest
 secret = 潮之鐘的刻字｜「火照路，木記名，潮送人歸。」／下面多了一行小字：「三鐘齊鳴時，歌才唱得完。」
+
+[node gull] 海鷗的巢
+wave = 2
+event = tame
+count = 2
+side = 海鷗搶走的帽子
+giver = 凪
+giverlook = archer
+sidedesc = 收服搶走帽子的魔物
+offer = 媽媽送我的帽子被搶走了！牠們躲在海鷗巢那邊……嗚嗚。
+thanks = 帽子回來了！你是英雄！這個貝殼給你，它會唱歌喔。
+gold = 550
+xp = 400
+rarity = 3
 
 [node bellmouth] 鐘口
 wave = 3
@@ -529,16 +630,18 @@ players = 1-1
 style = stage
 
 [node iron_gate] 鐵門
+chat = 熱情的賣票員｜archer｜前排座位！飛濺區！保證被怪物的口水噴到！／挑戰者免費入場——因為你就是表演。
 wave = 1
 next = drill
 <enter>
 雷歐［serious］：挑戰者入場！鐵門後面的怪物已經放出來了！
 
 [node drill] 練習場
+chat = 退休的稻草人｜priest｜我在這裡當了二十年靶子，沒被打中過一次。／……因為大家都瞄別的靶。
 wave = 1
 event = targets
 count = 10
-next = kennel, pit
+next = kennel, pit, bet
 <enter>
 雷歐［normal］：先熱身——打中靶子，觀眾的稻草人別打。
 <clear>
@@ -573,6 +676,20 @@ next = locker, ring
 event = chest
 secret = 置物櫃的刻痕｜一排排的正字，最後一個沒寫完。／旁邊刻著：「再贏一場，就能回家。」
 
+[node bet] 地下賭盤
+wave = 2
+event = mimic
+count = 4
+side = 猜猜哪個是冠軍
+giver = 莊家
+giverlook = swordsman
+sidedesc = 幾個箱子只有一個是真的，猜中它
+offer = 來來來，猜猜冠軍腰帶在哪個箱子裡！猜錯的……嘿嘿，箱子會咬人。
+thanks = 嘖，又被猜中了。好吧，願賭服輸。
+gold = 600
+xp = 450
+rarity = 3
+
 [node ring] 角鬥場中央
 wave = 3
 <enter>
@@ -586,16 +703,18 @@ players = 1-1
 style = stage
 
 [node plate] 鐵板走道
+chat = 跳地刺舞的鬥士｜swordsman｜一、二、跳！一、二、跳！……啊！（被刺到）／我是故意的。這是舞步的一部分。
 wave = 1
 next = spikes
 <enter>
 雷歐［serious］：鐵板下面有地刺。跟著節奏走！
 
 [node spikes] 地刺迴廊
+chat = 牢房的老鼠｜archer｜吱。（牠叼著一張寫著「越獄計畫・第八十七版」的紙）
 wave = 2
 event = rhythm
 count = 8
-next = cell, dungeon
+next = cell, dungeon, rats
 <enter>
 旁白：地刺照著節拍刺出又收回。跟著拍子出手！
 <clear>
@@ -630,6 +749,20 @@ next = cache, cage_end
 event = chest
 secret = 獄卒的紀錄｜「霸主下令：所有挑戰者的名字，從帳冊上刪掉。」
 
+[node rats] 老鼠的地道
+wave = 2
+event = hunt
+name = 老鼠王
+side = 越獄計畫・第八十八版
+giver = 老鼠（會說話的那隻）
+giverlook = archer
+sidedesc = 打倒佔據地道的老鼠王
+offer = 吱。人類，我的越獄地道被老鼠王佔了。……對，我也是老鼠。我們老鼠也有派系的。
+thanks = 吱吱！地道是我的了！這是我藏的寶貝，給你。
+gold = 650
+xp = 500
+rarity = 3
+
 [node cage_end] 魔物的牢籠
 wave = 3
 <enter>
@@ -643,15 +776,17 @@ players = 1-1
 style = stage
 
 [node stands] 看台入口
+chat = 瘋狂的觀眾｜swordsman｜殺！殺！殺！……啊不是，加油！加油！我說加油！
 wave = 1
 next = crowd
 <enter>
 雷歐［serious］：霸主帶著帳冊往看台上跑！先清開入口！
 
 [node crowd] 湧入的怪物
+chat = 賣爆米花的小販｜priest｜怪物都跑進觀眾席了，我的爆米花銷量反而翻倍。人生就是這樣。
 wave = 2
 event = koth
-next = bet, stairs
+next = bet, stairs, vip
 <enter>
 旁白：三個據點，站上去佔領！先到 60 分就能衝上看台。
 <clear>
@@ -685,6 +820,21 @@ next = box, top
 event = chest
 secret = 帳冊的一頁｜「黑晶一箱，換冠軍一名。」／送貨人：峽谷商隊。
 
+[node vip] 貴賓包廂
+wave = 2
+event = defend
+name = 嚇壞的貴族
+hp = 700
+side = 保護貴族
+giver = 貴族的管家
+giverlook = priest
+sidedesc = 守住嚇壞的貴族
+offer = 我家老爺嚇得腿軟了！怪物要衝進包廂了，求求你擋住牠們！
+thanks = 老爺說要重賞你……他說的「重」是指這個箱子很重。
+gold = 700
+xp = 500
+rarity = 3
+
 [node top] 最高的那一排
 wave = 3
 <enter>
@@ -698,15 +848,17 @@ players = 1-1
 style = stage
 
 [node tunnel] 撤退通道
+chat = 在通道打牌的鬥奴｜swordsman｜要撤退了？等我這把打完。……啊，輸了。走吧。
 wave = 1
 next = chains
 <enter>
 鐵娘［serious］：還有人沒離場！替他們把通道清出來！
 
 [node chains] 鏈錘鬥奴
+chat = 鐵匠的徒弟｜archer｜那個鏈錘是我打的！……我好像不該說出來。
 wave = 2
 event = parry
-next = medic, gate
+next = medic, gate, smith
 <enter>
 雷歐［serious］：鏈錘鬥奴的鎧甲太硬了——閃過攻擊、抓空檔反擊！
 <clear>
@@ -738,6 +890,19 @@ next = mask, exit
 event = chest
 secret = 鐵面具的內側｜刻著一個小小的名字：「小沙」。／是誰的弟弟，還是誰的孩子？
 
+[node smith] 鐵匠鋪
+wave = 2
+event = elements
+side = 鐵匠的試刀
+giver = 鐵匠
+giverlook = swordsman
+sidedesc = 用對的屬性打壞試刀的雕像
+offer = 我打了三座雕像，要用火、冰、雷才打得壞。你來試試我的雕像夠不夠硬！
+thanks = 太硬了……不對，你太強了。這是我最好的作品。
+gold = 750
+xp = 550
+rarity = 3
+
 [node exit] 通道盡頭
 wave = 3
 <enter>
@@ -751,15 +916,17 @@ players = 1-1
 style = stage
 
 [node outer] 鏈座外圍
+chat = 寫回憶錄的老冠軍｜mage｜第一章：我贏了。第二章：我又贏了。第三章……我開始覺得無聊了。
 wave = 1
 next = pillars
 <enter>
 雷歐［serious］：青銅鎧甲外圍的鏈座守衛。清開它們！
 
 [node pillars] 鏈座
+chat = 不想贏的鬥士｜swordsman｜我已經輸了三十場，都是故意的。輸了就不用上場了。
 wave = 2
 event = elemshield
-next = last, hall
+next = last, hall, chant
 <enter>
 旁白：守衛帶著火、冰、雷的護盾。碰場邊的屬性球，用對的屬性打！
 <clear>
@@ -793,6 +960,22 @@ next = trophy, door
 event = chest
 secret = 獎盃底座｜歷代冠軍的名字。最後一個被劃掉了：雷歐。
 
+[node chant] 冠軍的試煉
+wave = 2
+event = chant
+riddle = 不必贏，只要什麼？
+answer = 活著
+hint = 雷歐說過的話
+side = 冠軍的問題
+giver = 老冠軍
+giverlook = mage
+sidedesc = 回答老冠軍的問題
+offer = 我寫了一輩子的回憶錄，最後一章只有一個問題。你答得出來，就把我的東西給你。
+thanks = 對。……我花了四十年才想通。拿去吧。
+gold = 800
+xp = 600
+rarity = 4
+
 [node door] 出口
 wave = 3
 <enter>
@@ -807,6 +990,7 @@ players = 1-1
 style = stage
 
 [node trail] 山道
+chat = 數駱駝的小孩｜archer｜一隻駱駝、兩隻駱駝、三隻……（睡著了）
 wave = 1
 next = cliff
 <enter>
@@ -815,7 +999,7 @@ next = cliff
 [node cliff] 落石崖
 wave = 2
 event = collapse
-next = camel, pass
+next = camel, pass, oasis
 <enter>
 旁白：崖頂的石頭一塊塊掉下來。紅框亮起的地方要閃開！
 <clear>
@@ -836,6 +1020,7 @@ xp = 650
 rarity = 3
 
 [node pass] 隘口
+chat = 吹牛的馬伕｜swordsman｜這座隘口？我一個人揹著三匹馬走過去的！／……是馬揹著我。
 wave = 2
 event = barrage
 time = 40
@@ -848,6 +1033,19 @@ next = cave, camp
 [node cave] 岩縫
 event = chest
 secret = 岩縫裡的刻字｜「岩之鐘在山的心裡。山醒來的時候，鐘會先醒。」
+
+[node oasis] 小綠洲
+wave = 2
+event = vigil
+side = 守住綠洲的篝火
+giver = 馬幫的廚娘
+giverlook = priest
+sidedesc = 守住四堆篝火撐到天亮
+offer = 晚上的山道冷得要命，篝火不能熄！你幫我守著，我去煮湯。
+thanks = 湯煮好了！……不過你守了一整晚，湯先給你喝。還有這個。
+gold = 900
+xp = 650
+rarity = 3
 
 [node camp] 山道營地
 wave = 3
@@ -862,16 +1060,18 @@ players = 1-1
 style = stage
 
 [node palisade] 營地柵欄
+chat = 站崗的守衛（不專業）｜swordsman｜站住！口令！……我也忘了口令。你過吧。
 wave = 1
 next = tents
 <enter>
 小沙［serious］：商隊營地就在柵欄後面。他們的箱子，從來不讓人看。
 
 [node tents] 帳篷區
+chat = 商隊的廚師｜priest｜今天的湯是「神秘湯」。／不能問裡面有什麼，問了就不神秘了。
 wave = 2
 event = mimic
 count = 5
-next = ledger, mine
+next = ledger, mine, arena
 <enter>
 旁白：帳篷裡堆滿了一模一樣的箱子。只有一個是真的！
 <clear>
@@ -907,6 +1107,19 @@ next = crate, depot
 event = chest
 secret = 箱底的封條｜「送往：角鬥場、記名林、炎之山。」／三個地方，三口鐘。
 
+[node arena] 營地的摔角場
+wave = 2
+event = parry
+side = 摔角大賽
+giver = 商隊的大力士
+giverlook = swordsman
+sidedesc = 閃過攻擊再反擊，打倒摔角場的對手
+offer = 嘿！來比一場？只能閃開再還手，硬碰硬算你輸！
+thanks = 哈哈哈！好身手！這是冠軍腰帶……的扣環。腰帶我還要用。
+gold = 950
+xp = 700
+rarity = 3
+
 [node depot] 礦坑深處
 wave = 3
 <enter>
@@ -920,17 +1133,19 @@ players = 1-1
 style = stage
 
 [node wall] 刻痕岩壁
+chat = 在岩壁上刻名字的遊客｜archer｜我只是刻個「到此一遊」，為什麼岩壁在發光？
 wave = 1
 next = carvings
 <enter>
 老駝［normal］：跟著岩壁上的刻痕走，就能走到山道盡頭。
 
 [node carvings] 古老的刻痕
+chat = 石頭收藏家｜priest｜這顆石頭像一隻貓，這顆像兩隻貓，這顆……像三隻貓。
 wave = 2
 event = runes
 count = 5
 seq = 4
-next = hermit, ridge
+next = hermit, ridge, quarry
 <enter>
 旁白：刻痕照順序亮了一遍。照順序踩上去！
 <clear>
@@ -965,6 +1180,19 @@ next = niche, summit
 event = chest
 secret = 最後的刻痕｜「我們把三口鐘的聲音分開了。／因為一起響的時候，連海也會停下來聽。」
 
+[node quarry] 採石場
+wave = 2
+event = collapse
+side = 採石場的落石
+giver = 採石工
+giverlook = swordsman
+sidedesc = 在崩塌的採石場撐過去
+offer = 採石場要塌了，可是我的工具還在裡面！幫我擋住怪物，我衝進去拿！
+thanks = 拿到了！……其實只是一把鐵鎚，但它跟了我二十年。這個給你。
+gold = 1000
+xp = 750
+rarity = 4
+
 [node summit] 山道盡頭
 wave = 3
 <enter>
@@ -978,16 +1206,18 @@ players = 1-1
 style = stage
 
 [node slope] 碎岩坡
+chat = 地震預報員｜mage｜根據我的計算，下一次地波會在……（地面晃了一下）……剛剛。
 wave = 1
 next = quake
 <enter>
 阿鈴［serious］：鈴舌一定要保住！跟我來！
 
 [node quake] 地波
+chat = 跟著節奏跳舞的駱駝｜archer｜（駱駝跟著地波的節拍搖頭晃腦，看起來很開心）
 wave = 2
 event = rhythm
 count = 8
-next = bell, lizard
+next = bell, lizard, kids
 <enter>
 旁白：地面跟著心跳般的節拍震動。跟著拍子出手！
 <clear>
@@ -1020,6 +1250,19 @@ next = stash, crest
 event = chest
 secret = 甲蜥的寶物堆｜亮晶晶的東西：一顆鈕扣、一枚銅幣、一片鐘舌的碎片……／甲蜥好像很喜歡會響的東西。
 
+[node kids] 躲雨的孩子們
+wave = 2
+event = koth
+side = 搶回遊戲場
+giver = 孩子王
+giverlook = archer
+sidedesc = 佔領三個據點，把遊戲場搶回來
+offer = 甲蜥佔了我們的遊戲場！大人都不幫忙……你、你會幫我們吧？
+thanks = 遊戲場是我們的了！你可以當我們的副孩子王！這是入會禮物。
+gold = 1050
+xp = 800
+rarity = 4
+
 [node crest] 坡頂
 wave = 3
 <enter>
@@ -1033,15 +1276,17 @@ players = 1-1
 style = stage
 
 [node spine] 岩脊
+chat = 登山家｜swordsman｜我爬過一百座山！這是第一百零一座，也是第一次迷路。
 wave = 1
 next = echo
 <enter>
 阿鈴［serious］：把鈴舌送到鐘口下方！最後一段岩脊了！
 
 [node echo] 回聲谷
+chat = 回聲本人（？）｜mage｜你好——你好——好——／……其實是我躲在石頭後面喊的。
 wave = 2
 event = koth
-next = kids, ledge
+next = kids, ledge, bells
 <enter>
 旁白：三個據點，站上去佔領！讓鈴聲傳遍山谷。
 <clear>
@@ -1074,6 +1319,21 @@ next = chime, bellfoot
 [node chime] 風鈴架
 event = chest
 secret = 風鈴架上的布條｜三種字跡：焰、澪、翠。／「等鐘聲連起來的那天，我們在潮之鐘下見。」
+
+[node bells] 風鈴的小路
+wave = 2
+event = runes
+count = 5
+seq = 4
+side = 阿鈴的風鈴
+giver = 阿鈴
+giverlook = archer
+sidedesc = 照順序踩亮風鈴
+offer = 爺爺做的風鈴會照順序響。你記得住嗎？踩錯了……山會生氣喔。
+thanks = 全對！爺爺一定也聽到了。這是他留給下一個領路人的東西。
+gold = 1100
+xp = 850
+rarity = 4
 
 [node bellfoot] 鐘口下方
 wave = 3

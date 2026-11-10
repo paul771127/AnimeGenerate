@@ -413,6 +413,7 @@ namespace SpellDuel
             foreach (var s in exploreRun.map.sparkles)
             {
                 if (s.found || Battle.FlatDistance(s.pos, Me.Feet) > ExploreRun.SparkleTapRange) continue;
+                if (s.id == "hidden_chest" && spCracks.Exists(c => !c.broken)) continue;   // 密室的寶箱：牆還沒打破不能隔牆點
                 var sp = cam.WorldToScreenPoint(WorldFrame.FromWorld(s.pos + Vector3.up * 0.5f));
                 if (sp.z <= 0f || Vector2.Distance(new Vector2(sp.x, sp.y), tp) > Screen.width * 0.12f) continue;
                 if (exploreRun.TapSparkle(s.id, Me.Feet) != null) { exSparkleTapAt = Time.time; if (s.kind == "chest") OnDungeonChestOpened(exploreRun, s); Sfx.Play("coin", 0.8f); Haptics.Play(Haptics.Kind.Success); Burst(s.pos + Vector3.up * 0.5f, new Color(1f, 0.95f, 0.6f)); var sat = s.pos; ExploreFx.Once(exRoot, "fx_C2_discover", () => sat + Vector3.up * 0.6f, 1.8f); }

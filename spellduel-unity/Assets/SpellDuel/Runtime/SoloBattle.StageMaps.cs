@@ -87,6 +87,8 @@ namespace SpellDuel
                 });
             }
             PlaceSideNpcs(map);
+            BuildStagePuzzles(run);   // 推巨石、機關石門、裂牆密室（SoloBattle.StagePuzzles.cs）
+            PlaceChatNpcs(map);
             PlaceStars(map);
             PlaceTablets(map);
         }
@@ -97,6 +99,35 @@ namespace SpellDuel
             int have = StarCount(st.id);
             Say($"🗺 {st.title}：清除地點會打開下一扇門\n❗ NPC 有支線、⭐ 是小遊戲試煉（不強制）\n岔路和角落還藏著 {StageStars} 顆星星與古老的石碑（已找到 {have}/{StageStars}）", 6f);
             stHudUntil = Time.time + 8f;
+        }
+
+        // ---------------------------------------------------------------- 閒聊的 NPC
+        /// <summary>地點寫 chat／chat2 = 名字｜外觀｜台詞／台詞…：站在地點角落，走近輪流說一句（沒有任務，純搞笑、劇情補充）</summary>
+        void PlaceChatNpcs(ExploreMap map)
+        {
+            int idx = 0;
+            foreach (var a in map.areas)
+                foreach (var key in new[] { "chat", "chat2" })
+                {
+                    if (!a.node.param.TryGetValue(key, out var v) || string.IsNullOrEmpty(v)) continue;
+                    var parts = v.Split('｜'); if (parts.Length < 3) continue;
+                    var rc = a.rect;
+                    var spots = new[] { new Vector2(0.3f, 0.75f), new Vector2(0.7f, 0.25f), new Vector2(0.25f, 0.3f), new Vector2(0.75f, 0.7f) };
+                    foreach (var sp in spots)
+                    {
+                        var p = map.World(rc.xMin, rc.yMin) + new Vector3(sp.x * rc.width, 0f, sp.y * rc.height) * ExploreMap.CellSize;
+                        if (!map.Walkable(p, 0.5f)) continue;
+                        bool ok = true;
+                        foreach (var n in map.npcs) if (Battle.FlatDistance(n.pos, p) < 3f) ok = false;
+                        foreach (var tk in stTaken) if (Battle.FlatDistance(tk, p) < 3f) ok = false;
+                        if (!ok) continue;
+                        var lines = parts[2].Split('／');
+                        for (int i = 0; i < lines.Length; i++) lines[i] = lines[i].Trim();
+                        map.npcs.Add(new ExNpc { id = "chat_" + (idx++), name = parts[0].Trim(), look = parts[1].Trim(), pos = p, chat = lines });
+                        stTaken.Add(p);
+                        break;
+                    }
+                }
         }
 
         // ---------------------------------------------------------------- 星星
@@ -122,6 +153,7 @@ namespace SpellDuel
             }
             var rng = new System.Random(stStageId.GetHashCode() & 0x7fffffff);
             var picked = new List<Vector3>();
+            foreach (var h in stHiddenSpots) if (picked.Count < StageStars) picked.Add(h);   // 密室裡一定有一顆
             for (int pass = 0; pass < 2 && picked.Count < StageStars; pass++)
             {
                 float minGap = pass == 0 ? 14f : 6f;
@@ -134,6 +166,7 @@ namespace SpellDuel
                     foreach (var q in picked) if (Battle.FlatDistance(q, p) < minGap) { ok = false; break; }
                     foreach (var s in map.sparkles) if (Battle.FlatDistance(s.pos, p) < 1.5f) ok = false;
                     foreach (var n in map.npcs) if (Battle.FlatDistance(n.pos, p) < 2f) ok = false;
+                    foreach (var tk in stTaken) if (Battle.FlatDistance(tk, p) < 4f) ok = false;
                     if (ok) picked.Add(p);
                 }
             }
@@ -207,6 +240,7 @@ namespace SpellDuel
                         foreach (var n in map.npcs) if (Battle.FlatDistance(n.pos, p) < 2.5f) ok = false;
                         foreach (var t in stTablets) if (Battle.FlatDistance(t.pos, p) < 2.5f) ok = false;
                         foreach (var s in stStars) if (Battle.FlatDistance(s.pos, p) < 2f) ok = false;
+                        foreach (var tk in stTaken) if (Battle.FlatDistance(tk, p) < 2.5f) ok = false;
                         if (ok) { at = p; k = c + 1; }
                     }
                     if (at == null) continue;
@@ -264,6 +298,7 @@ namespace SpellDuel
             UpdateChapterGates(run);
             UpdateStars();
             UpdateTablets(run);
+            UpdateStagePuzzles(run, dt);
         }
 
         /// <summary>右上角：這一關找到幾顆星星（剛進關、撿到時顯示一下）</summary>

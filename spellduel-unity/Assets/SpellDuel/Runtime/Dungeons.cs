@@ -10,7 +10,7 @@ namespace SpellDuel
         /// <summary>特殊地點可以寫的設定</summary>
         public static readonly string[] EventKeysAll = { "name", "hp", "time", "count", "seq", "riddle", "answer", "hint", "look", "fail", "carpet", "exit",
             // 故事小關的地圖（stage_maps.txt）：支線任務、隱藏彩蛋
-            "side", "sidedesc", "giver", "giverlook", "offer", "thanks", "gold", "xp", "rarity", "secret", "secret2" };
+            "side", "sidedesc", "giver", "giverlook", "offer", "thanks", "gold", "xp", "rarity", "secret", "secret2", "chat", "chat2" };
         /// <summary>地點 id（地圖用；[room] 沒寫就是 r1、r2…）</summary>
         public string id;
         /// <summary>事件：battle 戰鬥、chest 寶箱（不用打）、boss 首領（wave 是 10 的倍數就自動是首領）</summary>

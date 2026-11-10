@@ -64,6 +64,7 @@ namespace SpellDuel
     public class ExNpc
     {
         public string id, name, look, quest;
+        public string[] chat; public int chatAt;   // 閒聊的 NPC（故事小關的地圖）：沒有任務，走近輪流說一句
         public Vector3 pos;
         public bool hidden;               // 閃光點觸發後才出現
     }
@@ -198,6 +199,9 @@ namespace SpellDuel
         /// 這一點能不能站（離牆 margin 公尺以內也算不行）：玩家用 0.35m、怪物用 0.45m。
         /// 牆是格子：點落在牆格、或離牆格的邊不到 margin 都不行。
         /// </summary>
+        /// <summary>額外的擋路物（機關）：true＝擋住</summary>
+        public System.Func<Vector3, float, bool> extraBlock;
+
         public bool Walkable(Vector3 p, float margin = 0.35f)
         {
             var c = Cell(p);
@@ -227,6 +231,7 @@ namespace SpellDuel
                     }
                 }
             if (PropAt(p, margin) != null) return false;   // 景物障礙
+            if (extraBlock != null && extraBlock(p, margin)) return false;   // 故事小關的機關：巨石、深坑、石門（SoloBattle.StagePuzzles.cs）
             return true;
         }
 
@@ -752,6 +757,7 @@ namespace SpellDuel
         public void Talk(ExNpc n)
         {
             talking = n; talkText = null; offering = null; asking = false;
+            if (n.chat != null && n.chat.Length > 0) { talkText = n.chat[n.chatAt++ % n.chat.Length]; return; }   // 閒聊的 NPC
             if (n.id == "outpost") { var e = map.Quest("escort"); talkText = e.state == ExQuestState.Done ? e.thanks : "這裡是前哨站。林子裡很危險，迷路的人常常回不來……"; return; }
             if (n.id == "spirit") { var q = map.Quest("h_spirit"); if (q.state != ExQuestState.Done) { talkText = q.offer; spiritBlessing = true; Complete(q); } else talkText = q.thanks; return; }
             if (n.id == "guardian")

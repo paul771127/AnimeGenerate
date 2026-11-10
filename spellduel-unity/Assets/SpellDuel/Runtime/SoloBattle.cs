@@ -2210,6 +2210,7 @@ namespace SpellDuel
                     pendingGold += Mathf.RoundToInt(Economy.StageGold(st) * rmul * (1f + gambleBonus));   // 鬥場賭局：每張詛咒卡 +30%
                     string bonusNote = GrantStageBonus(st, rmul);   // 小目標達成：額外金幣＋試煉幣
                     bonusNote += GrantStageRating(st, rmul);        // 評等 S／A：額外獎勵（SoloBattle.StageRating.cs）
+                    bonusNote += GrantStageMedals(st);              // 故事小關的地圖：三枚勳章（SoloBattle.StagePuzzles.cs）
                     string loot = GrantLoot($"{st.title} 通關", false) + bonusNote;
                     if (prof != null)
                     {
@@ -3125,6 +3126,7 @@ namespace SpellDuel
         {
             if (kind == "exemote") { if (!string.IsNullOrEmpty(text)) floaters.Add(new Floater { posMap = at, text = text, color = c, born = Time.time }); return; }   // 探索的怪自言自語、聊天、打盹
             if (kind == "evspeak") { Tts.Warmup(); Tts.Speak(text); return; }
+            StagePuzzleCast(kind);   // 故事小關的地圖：點火把、敲裂牆（SoloBattle.StagePuzzles.cs）
             if (LabBattleEvent(kind, at)) return;   // 節拍、砲台（SoloBattle.MoreEvents.cs）   // 聲控小遊戲：電腦唸題目（Tts.cs）
             if (OnRoomEventFx(kind, at, c, text)) return;   // 副本特殊地點（SoloBattle.RoomEvents.cs）
             if (kind == "petcaught") PetArtFx.Capture(WorldFrame.FromWorld(at), true);   // 收服成功：繩結收合＋爪印（PetArtFx.cs）
