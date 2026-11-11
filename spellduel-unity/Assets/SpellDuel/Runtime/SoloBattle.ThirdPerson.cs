@@ -143,6 +143,7 @@ namespace SpellDuel
         void UpdateSelfRig()
         {
             bool show = TpOn && Me != null;
+            UpdateTpOcclusion(show);   // 場景擋住主角：變半透明（SoloBattle.TpOcclusion.cs）
             if (!show)
             {
                 if (selfRig) { Destroy(selfRig.gameObject); selfRig = null; }
