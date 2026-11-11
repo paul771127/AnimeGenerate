@@ -17,7 +17,7 @@ namespace SpellDuel
         /// 角色在手機前方幾公尺；往左偏多少（越肩：角色在畫面偏左，正前方近身的敵人從右肩旁邊看得到）；
         /// 攝影機高度＝約 2.9m（使用者要求：頭頂上方半顆頭再高 1m）→ 世界往下降「這個高度 − 手機站著的高度」
         /// </summary>
-        public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0f /* 使用者：角色放在畫面正中間 */, HeroCamHeight = 3.9f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m
+        public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0f /* 使用者：角色放在畫面正中間 */, HeroCamHeight = 3.4f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m；之後「稍微降低些」（3.9 → 3.4）
         float tpLift; System.Func<bool> tpNpcHook;
         /// <summary>第三人稱主角的大小（使用者要求縮成 70%；只縮外觀，判定不變）</summary>
         public const float HeroScale = 0.49f;   // 使用者：70% 再縮 70%
