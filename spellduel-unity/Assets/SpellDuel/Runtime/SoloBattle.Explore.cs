@@ -326,6 +326,7 @@ namespace SpellDuel
                 if (!rig) { rig = CharacterRig.Create(n.look); rig.InCombat = false; ExploreArt.DressNpc(rig, n.id); if (n.look == "archer") SlingBow(rig); exNpcRigs[n.id] = rig; SpawnFade.Play(rig.gameObject); }
                 var fwd = Fighter.Flat(me - n.pos); if (fwd == Vector3.zero) fwd = Vector3.back;
                 rig.SetPose(WorldFrame.FromWorld(n.pos), WorldFrame.DirFromWorld(fwd));
+                rig.transform.localScale = Vector3.one * (TpOn ? HeroScale : 1f);   // 第三人稱：跟主角一樣縮小（使用者回報 NPC 看起來非常高大）
                 ExploreArt.QuestMark(rig.transform, ExNpcMark(run, n));
             }
             // 月光草、閃光點

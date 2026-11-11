@@ -18,6 +18,12 @@ namespace SpellDuel
         static readonly int[] Frames = { 4, 6, 4 };
 
         public float MoveSpeed;
+        /// <summary>
+        /// 第三人稱（使用者回報：關卡裡的 NPC 沒有跟著鏡頭與視角變化，看起來非常高大）：
+        /// 主角縮成 HeroScale，NPC 的圖也一起縮到差不多的身高，並且整張朝向鏡頭（從上往下看時往後仰），不再只轉水平。
+        /// </summary>
+        public static System.Func<bool> ThirdPersonOn;
+        public const float TpScale = 0.4f;
         Texture2D[] tex;
         Transform quad; Mesh mesh; MeshRenderer mr; MaterialPropertyBlock block;
         readonly Vector2[] uv = new Vector2[4];
@@ -119,7 +125,10 @@ namespace SpellDuel
         {
             var cam = Camera.main; if (!cam || quad == null || tex == null) return;
             float dt = Time.deltaTime, now = Time.time;
-            var look = cam.transform.position - quad.position; look.y = 0f;
+            bool tp = ThirdPersonOn != null && ThirdPersonOn();
+            float sc = tp ? TpScale : 1f;
+            if (Mathf.Abs(transform.localScale.x - sc) > 1e-4f) transform.localScale = Vector3.one * sc;
+            var look = cam.transform.position - quad.position; if (!tp) look.y = 0f;   // 第三人稱：連上下也正對鏡頭（以腳底為軸往後仰）
             if (look.sqrMagnitude > 1e-6f) quad.rotation = Quaternion.LookRotation(-look.normalized, Vector3.up);
             // 動作：走路 → 小動作（站著、時間到）→ 待機
             int a, frame;

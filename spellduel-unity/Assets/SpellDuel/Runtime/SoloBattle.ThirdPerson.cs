@@ -18,7 +18,7 @@ namespace SpellDuel
         /// 攝影機高度＝約 2.9m（使用者要求：頭頂上方半顆頭再高 1m）→ 世界往下降「這個高度 − 手機站著的高度」
         /// </summary>
         public const float ThirdPersonDist = 3.5f, ThirdPersonSide = 0f /* 使用者：角色放在畫面正中間 */, HeroCamHeight = 3.9f, MaxLift = 3.3f;   // 使用者：至少比頭頂上方半顆頭再高 1m；之後再高 1m
-        float tpLift;
+        float tpLift; System.Func<bool> tpNpcHook;
         /// <summary>第三人稱主角的大小（使用者要求縮成 70%；只縮外觀，判定不變）</summary>
         public const float HeroScale = 0.49f;   // 使用者：70% 再縮 70%
         /// <summary>第三人稱的準心在畫面高度的哪裡（從上往下的比例）：比正中間高一點，不會對到角色的頭</summary>
@@ -43,6 +43,8 @@ namespace SpellDuel
         void ApplyThirdPerson(Fighter me)
         {
             tpAimNow = TpOn;
+            if (tpNpcHook == null) tpNpcHook = () => this && TpOn;
+            SpriteNpcView.ThirdPersonOn = tpNpcHook;   // NPC 的 2D 圖跟著縮小、正對鏡頭
             if (!TpOn)
             {
                 if (tpLifted && area != null) { ShiftWorld(WorldFrame.DirFromWorld(Vector3.up) * tpLift); me.head.y -= tpLift; }   // 中途關掉：世界升回來
