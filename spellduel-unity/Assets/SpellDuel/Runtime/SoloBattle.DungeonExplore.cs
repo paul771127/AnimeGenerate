@@ -43,7 +43,7 @@ namespace SpellDuel
             battle.themeOverride = dungeon.ThemeOf(run.map.areas[0].node);
             ExHookBattle();
             Ticker(ExLines($"📜 {run.Objective}"));
-            if (dungeon.style == "stage") StageMapBegin(run);   // 故事小關的地圖：支線 NPC、隱藏的星星、石碑（SoloBattle.StageMaps.cs）
+            if (dungeon.style == "stage") { try { StageMapBegin(run); } catch (System.Exception e) { Debug.LogException(e); } }   // 故事小關的地圖：支線 NPC、隱藏的星星、石碑（SoloBattle.StageMaps.cs）
             if (dungeon.IsChapter) ChapterBegin(run);   // 第一大關：脫出點、支線 NPC、岩漿、存檔（SoloBattle.Chapter.cs）
         }
 

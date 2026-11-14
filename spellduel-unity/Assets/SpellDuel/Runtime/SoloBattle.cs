@@ -2603,7 +2603,7 @@ namespace SpellDuel
             if (phase != Phase.Fighting && phase != Phase.Over) return;
             if (battle == null) return;
             SyncPlayer(Me);
-            UpdateSelfRig();   // 第三人稱：主角的 3D 角色（SoloBattle.ThirdPerson.cs）
+            try { UpdateSelfRig(); } catch (System.Exception e) { Debug.LogException(e); }   // 第三人稱：主角的 3D 角色（SoloBattle.ThirdPerson.cs）；出錯也不能擋住後面的戰鬥準備（使用者回報校正頁卡住）
             TrackMyHits();   // 故事評等：被打中幾次（SoloBattle.StageRating.cs）
             float dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (Time.time < hitStopUntil) dt = 0f;   // 命中停頓
@@ -2702,7 +2702,7 @@ namespace SpellDuel
             if (!Tracking.Ok) return;
             me.head = WorldFrame.ToWorld(cam.transform.position);
             me.forward = WorldFrame.DirToWorld(cam.transform.forward);
-            if (me == Me) ApplyThirdPerson(me);   // 第三人稱：角色在手機前方（SoloBattle.ThirdPerson.cs）
+            if (me == Me) { try { ApplyThirdPerson(me); } catch (System.Exception e) { Debug.LogException(e); } }   // 第三人稱：角色在手機前方（SoloBattle.ThirdPerson.cs）
             UpdateBodyDodge(me);
         }
 
